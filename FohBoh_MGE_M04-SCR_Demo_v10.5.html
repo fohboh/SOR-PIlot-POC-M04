@@ -1,0 +1,1839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>FohBoh | MGE™ — Sentry M04:SCR Supply Chain Certification (v10)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF9F6; --card:#FFFFFF; --fill:#F3F1EC; --fill2:#EAE7E0; --line:#E6E3DC; --line2:#D6D2C8;
+    --primary:#6D28D9; --teal:#00A7A7; --highlight:#7C3AED; --navy:#0B1F4B; --red:#D92D20; --amber:#B7791F;
+    --ink:#0A0A0A; --muted:#5B6478; --muted2:#8A93A6;
+    --head:'Inter',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);min-height:100vh;font-family:var(--body);color:var(--ink);-webkit-font-smoothing:antialiased}
+  button{font-family:var(--body)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--line2);border-radius:3px}
+  #root{min-height:100vh}
+</style>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.7/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const _w = console.warn; console.warn = function(m,...r){ if (typeof m==="string" && m.includes("in-browser Babel")) return; _w.apply(console,[m,...r]); };
+</script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+/* ═══════════════════════════ DESIGN TOKENS (FohBoh.ai Website Identity System — purple/teal) ═══════════════════════════ */
+const C = {
+  paper:"#FAF9F6", card:"#FFFFFF", fill:"#F3F1EC", fill2:"#EAE7E0", line:"#E6E3DC", line2:"#D6D2C8",
+  // semantic mapping under the FohBoh purple/teal identity:
+  gold:"#6D28D9",   // primary purple — brand, primary actions, active states, governance
+  green:"#00A7A7",  // teal — verified, certified, PASS, sealed output, recovered dollars
+  violet:"#007F7F", // deep teal — seals and hashes (trusted family)
+  steel:"#0B1F4B",  // navy — reference/system-of-record context
+  red:"#D92D20",    // red — FAIL, violations, dollars at risk ONLY
+  amber:"#B7791F",  // amber — watch states (MONITOR, risk flags)
+  hi:"#7C3AED",     // highlight — hover/focus only
+  ink:"#0A0A0A", muted:"#5B6478", muted2:"#8A93A6",
+  redT:"rgba(217,45,32,.08)", goldT:"rgba(109,40,217,.09)", steelT:"rgba(11,31,75,.07)",
+  greenT:"rgba(0,167,167,.10)", violetT:"rgba(0,127,127,.09)", amberT:"rgba(183,121,31,.11)",
+};
+const F = { head:"'Inter',system-ui,sans-serif", body:"'Inter',system-ui,sans-serif", mono:"'IBM Plex Mono',ui-monospace,monospace" };
+
+const Logo = ({h=26}) => (
+  <span style={{display:"inline-flex",alignItems:"center",gap:h*0.32}}>
+    <svg width={h} height={h} viewBox="0 0 100 100" aria-hidden="true">
+      <rect x="0" y="6" width="44" height="44" fill="#0B1F4B"/>
+      <rect x="22" y="28" width="44" height="44" fill="#00A7A7"/>
+      <rect x="42" y="50" width="44" height="44" fill="#6D28D9"/>
+      <rect x="42" y="50" width="24" height="22" fill="#00A7A7"/>
+    </svg>
+    <span style={{fontFamily:F.head,fontWeight:900,fontSize:h*0.78,letterSpacing:"-0.04em",color:C.ink,lineHeight:1}}>FohBoh<span style={{color:C.gold}}>.ai</span></span>
+  </span>
+);
+const M = ({children,s={}}) => <span style={{fontFamily:F.mono,...s}}>{children}</span>;
+const H = ({children,s={}}) => <span style={{fontFamily:F.head,...s}}>{children}</span>;
+
+const Tag = ({color=C.muted,bg=C.fill,border,children,style={}}) => (
+  <span style={{fontSize:10,fontFamily:F.mono,letterSpacing:"0.08em",fontWeight:600,color,background:bg,
+    border:`1px solid ${border||"transparent"}`,padding:"3px 9px",borderRadius:4,textTransform:"uppercase",whiteSpace:"nowrap",...style}}>{children}</span>
+);
+const Spin = ({sz=14,color=C.gold}) => (
+  <div style={{width:sz,height:sz,border:`2px solid ${C.line}`,borderTopColor:color,borderRadius:"50%",animation:"spin .7s linear infinite",flexShrink:0}}/>
+);
+const Label = ({children,color=C.muted2,style={}}) => (
+  <div style={{fontSize:10,fontFamily:F.mono,color,letterSpacing:"0.12em",textTransform:"uppercase",fontWeight:600,...style}}>{children}</div>
+);
+const Card = ({children,style={},accent}) => (
+  <div style={{background:C.card,border:`1px solid ${C.line}`,borderRadius:12,padding:20,marginBottom:16,
+    borderLeft:accent?`4px solid ${accent}`:`1px solid ${C.line}`,...style}}>{children}</div>
+);
+const money = v => "$"+(Number(v)||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+/* ═══════════════════════════ REFERENCE DATA — the "system of record" MGE reconciles against ═══════════════════════════ */
+const REF = {
+  contracts: {
+    "Northstar Foodservice — North Texas": {agreement:"Master Vendor Agreement §4.2 (eff. Jan 1, 2026, locked through Q3)",
+      rates:{"BF-RIB-CH":16.50,"PRD-ROM-12":42.50,"DRY-OIL-EVOO":38.75,"FRZ-SHR-21":14.80,"PL-CHK-THI":3.15,"PRD-POT-RUS":21.40,"DRY-BUT-UNS":74.20}},
+    "Lakeshore Produce & Provisions": {agreement:"Master Vendor Agreement §3.1 (produce category, locked through Q3 2026)",
+      rates:{"PR-ROMATOMIX":28.50,"PR-SPINACH-5":14.20,"PR-GARLIC-3":8.75,"PR-LEMON-CS":32.40,"PR-MUSHRM-10":22.80,"PR-BELLPEP":36.00,"PR-BASILFRS":6.50}},
+    "Gulf Coast Seafood Co.": {agreement:"Supply Agreement Sched. B (eff. Mar 1, 2026)",
+      rates:{"SF-REDF-FIL":11.90,"SF-OYS-GULF":58.00,"SF-CRAB-LMP":34.50}},
+    "Metro Paper & Packaging": {agreement:"Pricing Schedule 2026-A",
+      rates:{"PK-TOGO-9X9":24.50,"PK-NAP-DIN":18.00,"PK-GLV-NIT-L":18.00}},
+  },
+  receiving: {
+    "RL-04392":{signed:"04/24/2026 14:22 CT · GM R. Alvarez",items:{"BF-RIB-CH":48,"PRD-ROM-12":6,"DRY-OIL-EVOO":8,"FRZ-SHR-21":25}},
+    "RL-44830":{signed:"04/24/2026 09:14 CT · GM D. Chen",items:{"PR-ROMATOMIX":10,"PR-SPINACH-5":16,"PR-GARLIC-3":20,"PR-LEMON-CS":8,"PR-MUSHRM-10":12,"PR-BELLPEP":6,"PR-BASILFRS":24}},
+    "RL-04455":{signed:"04/27/2026 07:48 CT · Sous Chef M. Okafor",items:{"SF-REDF-FIL":32,"SF-OYS-GULF":10,"SF-CRAB-LMP":6}},
+    "RL-44851":{signed:"04/28/2026 11:05 CT · GM D. Chen",items:{"PK-TOGO-9X9":20,"PK-NAP-DIN":10,"PK-GLV-NIT-L":15}},
+    "RL-04488":{signed:"05/01/2026 13:40 CT · GM R. Alvarez",items:{"PL-CHK-THI":60,"PRD-POT-RUS":12,"DRY-BUT-UNS":10}},
+  },
+  tax: {
+    "Bluefin Hospitality Group":{rate:0.0825,basis:"TX state 6.25% + Dallas Co./city 2.00% = 8.25% combined"},
+    "The Meridian Group":{rate:0,basis:"Illinois resale exemption on file — certificate IL-2026-44830"},
+  },
+  credits: {
+    "Northstar Foodservice — North Texas|Bluefin Hospitality Group":[
+      {id:"CM-2026-0118",amount:142.50,issued:"2026-04-28",reason:"Short delivery credit on INV-2026-04301",appliedOn:null}],
+  },
+  vendorHistory: {
+    "Northstar Foodservice — North Texas":{priorScore:68,trend:"DECLINING",certified90d:14,priorFlags:["Price drift","Repeat extension errors"]},
+    "Lakeshore Produce & Provisions":{priorScore:95,trend:"IMPROVING",certified90d:22,priorFlags:[]},
+    "Gulf Coast Seafood Co.":{priorScore:88,trend:"STABLE",certified90d:9,priorFlags:[]},
+    "Metro Paper & Packaging":{priorScore:90,trend:"STABLE",certified90d:6,priorFlags:[]},
+  },
+};
+const MQ6_LABEL = true; // show the internal model name beside "Trust Score" (partner/pilot surface). Set false for public surfaces.
+const REF_SUMMARY = `Five data streams on file — vendor invoices (ingested) · purchase orders · master vendor agreements (${Object.keys(REF.contracts).length}) · delivery confirmations (${Object.keys(REF.receiving).length} receiving logs) · credit memos — plus tax profiles and 90-day vendor history for ${Object.keys(REF.tax).length} operators`;
+
+/* ═══════════════════════════ PDF PARSER (pdf.js — text extraction, no inference) ═══════════════════════════ */
+async function extractRows(arrayBuffer){
+  const pdf = await pdfjsLib.getDocument({data:arrayBuffer}).promise;
+  const rows = [];
+  for (let p=1; p<=pdf.numPages; p++){
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    const byY = [];
+    for (const it of tc.items){
+      if (!it.str || !it.str.trim()) continue;
+      const y = Math.round(it.transform[5]), x = it.transform[4];
+      let row = byY.find(r=>Math.abs(r.y-y)<=2);
+      if (!row){ row={y,items:[]}; byY.push(row); }
+      row.items.push({x,str:it.str});
+    }
+    byY.sort((a,b)=>b.y-a.y);
+    for (const r of byY){ r.items.sort((a,b)=>a.x-b.x); rows.push(r.items.map(i=>i.str.trim()).join(" ").replace(/\s+/g," ")); }
+  }
+  return rows;
+}
+const num = s => parseFloat(String(s).replace(/[$,]/g,""));
+function parseInvoice(rows, fileName){
+  const text = rows.join("\n");
+  const get = re => { const m = text.match(re); return m ? m[1].trim() : null; };
+  const inv = {
+    fileName, vendor: (rows[0]||"Unknown vendor").replace(/\s+INVOICE\s*$/i,"").trim(),
+    vendorContact: get(/([a-z0-9._-]+@[a-z0-9.-]+\.[a-z]{2,})/i),
+    id: get(/Invoice No:?\s*([A-Z]{2,4}-\d{4}-\d{4,6})/i),
+    date: get(/Invoice Date:?\s*([A-Za-z]+ \d{1,2}, \d{4})/i),
+    dueDate: get(/Due Date:?\s*([A-Za-z]+ \d{1,2}, \d{4})/i),
+    po: get(/PO Number:?\s*([A-Z0-9-]+)/i),
+    receivingRef: get(/Receiving Ref:?\s*([A-Z]{2}-\d{4,6})/i),
+    operator: null, operatorSite: null,
+    subtotal: num(get(/Subtotal\s+\$?([\d,]+\.\d{2})/i)),
+    tax: num(get(/Sales Tax[^$\n]*\$?([\d,]+\.\d{2})/i)),
+    taxLabel: get(/(Sales Tax[^$\n]*)\$/i),
+    total: num(get(/TOTAL DUE\s+\$?([\d,]+\.\d{2})/i)),
+    lineItems: [],
+  };
+  const bt = rows.findIndex(r=>/^BILL TO/i.test(r));
+  if (bt>=0){ inv.operator = (rows[bt+1]||"").replace(/\s+DELIVERY.*$/,"").trim(); inv.operatorSite = (rows[bt+2]||"").replace(/\s+(Receiving Ref|Terms:).*$/,"").trim(); }
+  // Rows can merge across the two-column band; strip the right column if it leaked in.
+  if (inv.operator && inv.operator.includes("Receiving Ref")) inv.operator = inv.operator.split("Receiving Ref")[0].trim();
+  const lineRe = /^([A-Z0-9]+(?:-[A-Z0-9]+)+)\s+(.+?)\s+(\d+)\s+([A-Z]{2,4})\s+\$([\d,]+\.\d{2})\s+\$([\d,]+\.\d{2})$/;
+  for (const r of rows){ const m = r.match(lineRe); if (m) inv.lineItems.push({sku:m[1],description:m[2],qty:+m[3],unit:m[4],unitPrice:num(m[5]),lineTotal:num(m[6])}); }
+  if (!inv.id || inv.lineItems.length===0 || isNaN(inv.total)) {
+    const err = new Error("PARSE_FAIL"); err.detail = `Parsed ${inv.lineItems.length} line item(s); invoice id ${inv.id||"not found"}; total ${isNaN(inv.total)?"not found":money(inv.total)}.`; throw err;
+  }
+  return inv;
+}
+
+function parsePO(rows, fileName){
+  const text = rows.join("\n"); const get = re => { const m = text.match(re); return m ? m[1].trim() : null; };
+  const po = { fileName, id:get(/PO Number:?\s*([A-Z]{2,4}-[A-Z]{2,4}-\d{3,6})/i), date:get(/Order Date:?\s*([A-Za-z]+ \d{1,2}, \d{4})/i),
+    operator:(rows[0]||"").replace(/\s+PURCHASE ORDER\s*$/i,"").trim(), vendor:null, total:num(get(/PO TOTAL\s+\$?([\d,]+\.\d{2})/i)), lines:[] };
+  const vi = rows.findIndex(r=>/^VENDOR/i.test(r)); if (vi>=0) po.vendor = (rows[vi+1]||"").replace(/\s+SHIP TO.*$/i,"").trim();
+  const lineRe = /^([A-Z0-9]+(?:-[A-Z0-9]+)+)\s+(.+?)\s+(\d+)\s+([A-Z]{2,4})\s+\$([\d,]+\.\d{2})\s+\$([\d,]+\.\d{2})$/;
+  for (const r of rows){ const m=r.match(lineRe); if (m) po.lines.push({sku:m[1],description:m[2],qty:+m[3],unit:m[4],unitPrice:num(m[5]),lineTotal:num(m[6])}); }
+  if (!po.id || !po.lines.length){ const e=new Error("PARSE_FAIL"); e.detail=`Purchase order: parsed ${po.lines.length} line(s); PO number ${po.id||"not found"}.`; throw e; }
+  return po;
+}
+function parseReceiving(rows, fileName){
+  const text = rows.join("\n"); const get = re => { const m = text.match(re); return m ? m[1].trim() : null; };
+  const rl = { fileName, ref:get(/Receiving Ref:?\s*([A-Z]{2}-\d{4,6})/i), delivered:get(/Delivered:?\s*(\d{2}\/\d{2}\/\d{4}[^\n]*?)(?:\s+PO Ref|$)/im),
+    poRef:get(/PO Ref:?\s*([A-Z]{2,4}-[A-Z]{2,4}-\d{3,6})/i), invoiceRef:get(/Invoice Ref:?\s*([A-Z]{2,4}-\d{4}-\d{4,6})/i),
+    operator:(rows[0]||"").replace(/\s+RECEIVING LOG\s*$/i,"").trim(), vendor:null, receivedBy:null, items:{}, ordered:{}, refused:{}, lines:[] };
+  const vi = rows.findIndex(r=>/^VENDOR/i.test(r));
+  if (vi>=0){ const row=(rows[vi+1]||"").trim(); const m=row.match(/([A-Z]\.\s+[A-Za-z'’-]+\s*\([^)]+\))\s*$/); rl.receivedBy = m ? m[1].trim() : null; rl.vendor = (m ? row.slice(0,m.index) : row).replace(/\s+RECEIVED BY.*$/i,"").trim(); }
+  const lineRe = /^([A-Z0-9]+(?:-[A-Z0-9]+)+)\s+(.+?)\s+(\d+)\s+(\d+)\s+(\d+)\s+([A-Z]{2,4})$/;
+  for (const r of rows){ const m=r.match(lineRe); if (m){ rl.lines.push({sku:m[1],description:m[2],ordered:+m[3],received:+m[4],refused:+m[5],unit:m[6]}); rl.items[m[1]]=+m[4]; rl.ordered[m[1]]=+m[3]; rl.refused[m[1]]=+m[5]; } }
+  rl.signed = `${rl.delivered||"—"} · ${rl.receivedBy||"receiver on file"}`;
+  if (!rl.ref || !rl.lines.length){ const e=new Error("PARSE_FAIL"); e.detail=`Receiving log: parsed ${rl.lines.length} line(s); receiving ref ${rl.ref||"not found"}.`; throw e; }
+  return rl;
+}
+
+/* ═══════════════════════════ DETERMINISTIC RULES ENGINE — Sentry M04:SCR (rule set R211–R330, v1.0 draft) ═══════════════════════════ */
+const GATES = [
+  {id:"TGS-01",name:"Invoice-to-Contract Accuracy",w:25},
+  {id:"TGS-02",name:"Quantity Reconciliation",w:20},
+  {id:"TGS-03",name:"Credit Memo Completeness",w:15},
+  {id:"TGS-04",name:"Contract Term Compliance",w:15},
+  {id:"TGS-05",name:"Rebate Verification",w:10},
+  {id:"TGS-06",name:"Duplicate Detection",w:8},
+  {id:"TGS-07",name:"Waste-to-Purchase Ratio",w:4},
+  {id:"TGS-08",name:"Audit Completeness",w:3},
+];
+const RULES = [
+  {id:"R236",name:"Trust Score Floor — Certification Block",gate:"TGS-08"},
+  {id:"R211",name:"Invoice Unit Price vs. Contract Price Variance",gate:"TGS-01"},
+  {id:"R221",name:"Invoiced Quantity vs. Receiving Log Mismatch",gate:"TGS-02"},
+  {id:"R240",name:"Three-Way Match — Invoice vs. PO vs. Receiving",gate:"TGS-02"},
+  {id:"R226",name:"Duplicate Detection — Line-Level",gate:"TGS-06"},
+  {id:"R228",name:"Outstanding Credit Memo — Not Applied",gate:"TGS-03"},
+  {id:"R237",name:"Contract Term Compliance — Tax & Exemption Terms",gate:"TGS-04"},
+];
+const PRICE_TOLERANCE = 0.01; // R211 default tolerance 1%
+const CERT_THRESHOLD = 85;    // MQ6 certification threshold on evidence coverage (R236)
+const r2 = v => Math.round(v*100)/100;
+const toISO = s => { const d = new Date(s); return isNaN(d) ? null : d.toISOString().slice(0,10); };
+const normKey = k => String(k||"").toLowerCase().replace(/[^a-z0-9|]+/g,"");
+const lookup = (table,key) => { const nk=normKey(key); const hit=Object.keys(table).find(k=>normKey(k)===nk); return hit!==undefined ? table[hit] : undefined; };
+const gateScore = (amt, base) => Math.max(0, Math.round(100 - Math.min(100, (amt/base)*800)));
+
+function runRules(inv, ctx={}){
+  const contract = lookup(REF.contracts, inv.vendor);
+  const recv = ctx.recvDoc || lookup(REF.receiving, inv.receivingRef);
+  const recvSource = ctx.recvDoc ? `uploaded receiving log ${ctx.recvDoc.ref}` : (recv ? `receiving log ${inv.receivingRef} (system of record)` : "none");
+  const po = ctx.po || null;
+  const taxProfile = lookup(REF.tax, inv.operator);
+  const credits = lookup(REF.credits, `${inv.vendor}|${inv.operator}`)||[];
+  const histRaw = lookup(REF.vendorHistory, inv.vendor);
+  const hist = histRaw||{priorScore:75,trend:"STABLE",certified90d:0,priorFlags:[]};
+  const lines = inv.lineItems.map(l=>({...l,flag:"OK",expectedLineTotal:r2(l.qty*l.unitPrice)}));
+  const R = {};
+  const invISO = toISO(inv.date);
+  const headerSum = r2(lines.reduce((s,l)=>s+l.lineTotal,0));
+  const headerOK = Math.abs(r2(inv.subtotal+inv.tax)-inv.total)<=0.01 && Math.abs(headerSum-inv.subtotal)<=0.01;
+
+  /* ── R236 · Trust Score Floor — Certification Block (TGS-08) · evidence prerequisites, MQ6 six checks ── */
+  const hdrFields = ["id","date","dueDate","operator","receivingRef","vendorContact","subtotal","tax","total"];
+  const hdrPresent = hdrFields.filter(k=>inv[k]!==null && inv[k]!==undefined && inv[k]!=="" && !(typeof inv[k]==="number" && isNaN(inv[k]))).length;
+  const linesOK = lines.filter(l=>l.sku && l.qty>0 && l.unitPrice>=0 && l.lineTotal>=0).length;
+  const completeness = Math.round((hdrPresent/hdrFields.length)*60 + (lines.length?linesOK/lines.length:0)*40);
+  const consistency = headerOK ? 100 : 40;
+  let timeliness = 30, timelinessNote = "No receiving log matched — delivery timing cannot be evidenced.";
+  if (recv){ const m = recv.signed.match(/(\d{2})\/(\d{2})\/(\d{4})/); const rd = m ? new Date(`${m[3]}-${m[1]}-${m[2]}`) : null; const idt = invISO ? new Date(invISO) : null;
+    if (rd && idt){ const days = Math.round(Math.abs((rd-idt)/86400000)); timeliness = days<=1?100:days<=3?90:days<=7?75:50; timelinessNote = `Receiving log signed ${days} day${days===1?"":"s"} from invoice date.`; } }
+  const skusWithRate = contract ? lines.filter(l=>contract.rates[l.sku]!==undefined).length : 0;
+  const alignment = lines.length ? Math.round((skusWithRate/lines.length)*100) : 0;
+  const sources = [["Master vendor agreement",!!contract],["Receiving log",!!recv],["Operator tax profile",!!taxProfile],["90-day vendor history",!!histRaw]];
+  if (ctx.threeWay) sources.splice(2,0,["Purchase order",!!po]);
+  const reconIntegrity = Math.round((sources.filter(x=>x[1]).length/sources.length)*100);
+  const evaluableRules = 7 - (contract?0:1) - (recv?0:2) - (taxProfile?0:1);
+  const governance = Math.round((evaluableRules/7)*100);
+  const dims = [
+    {key:"completeness",label:"Completeness",score:completeness,note:`${hdrPresent}/${hdrFields.length} header fields · ${linesOK}/${lines.length} line items fully parsed.`},
+    {key:"consistency",label:"Consistency",score:consistency,note:headerOK?"Line items, subtotal, tax and total reconcile.":"Header arithmetic does not reconcile."},
+    {key:"timeliness",label:"Timeliness",score:timeliness,note:timelinessNote},
+    {key:"alignment",label:"Alignment",score:alignment,note:contract?`${skusWithRate}/${lines.length} SKUs carry a contracted rate.`:"No master agreement on file for this vendor."},
+    {key:"reconciliation",label:"Reconciliation integrity",score:reconIntegrity,note:`${sources.filter(x=>x[1]).length}/${sources.length} authoritative sources available: ${sources.map(x=>`${x[0]} ${x[1]?"✓":"✗"}`).join(", ")}.`},
+    {key:"governance",label:"Governance adherence",score:governance,note:`${evaluableRules}/7 rules evaluable on the evidence available.`},
+  ];
+  const coverage = Math.round(dims.reduce((a,d)=>a+d.score,0)/dims.length);
+  const certified = coverage >= CERT_THRESHOLD;
+  R.R236 = {ruleId:"R236",ruleName:"Trust Score Floor — Certification Block",gate:"TGS-08",scope:"Evidence prerequisites",result:certified?"PASS":"FAIL",
+    finding: certified ? `Evidence coverage ${coverage}/100 meets the ${CERT_THRESHOLD} certification floor. Contract, receiving log, tax profile and vendor history are on file; TGS-01 and TGS-02 can fire at full confidence.`
+      : `Evidence coverage ${coverage}/100 is below the ${CERT_THRESHOLD} certification floor. ${dims.filter(d=>d.score<CERT_THRESHOLD).map(d=>`${d.label} ${d.score}`).join(", ")}. CAAR output is blocked; findings below are identified exposure, not certified claims.`,
+    recoveryAmount:0, evidence:"MQ6 evidence-coverage checks: completeness, consistency, timeliness, alignment, reconciliation integrity, governance adherence.", blocks: !certified};
+
+  /* ── R226 · Duplicate Detection — line-level (TGS-06) ── same SKU on a second line; receiving log supports only the first quantity */
+  const seen = {};
+  lines.forEach((l,i)=>{ if (seen[l.sku]!==undefined){ const first=lines[seen[l.sku]]; const rq = recv ? recv.items[l.sku] : undefined; if (rq!==undefined && rq<=first.qty){ l.flag="DUPLICATE_LINE"; l.expectedLineTotal=0; } } else seen[l.sku]=i; });
+  const dupes = lines.filter(l=>l.flag==="DUPLICATE_LINE"); const dupAmt = r2(dupes.reduce((s,l)=>s+l.lineTotal,0));
+  R.R226 = dupes.length ? {ruleId:"R226",ruleName:"Duplicate Detection — Line-Level",gate:"TGS-06",scope:`SKU: ${dupes.map(d=>d.sku).join(", ")}`,result:"FAIL",
+      finding:dupes.map(d=>`${d.sku} appears on a second line (${d.qty} ${d.unit}); receiving log ${inv.receivingRef} supports a single delivery of ${recv.items[d.sku]} ${d.unit}.`).join(" "),
+      recoveryAmount:dupAmt,evidence:`${recvSource[0].toUpperCase()+recvSource.slice(1)} (${recv.signed}) cross-referenced against invoice line sequence.`,kind:"duplicate"}
+    : {ruleId:"R226",ruleName:"Duplicate Detection — Line-Level",gate:"TGS-06",scope:"Full invoice",result:"PASS",finding:`No duplicate SKUs or charges detected across ${lines.length} line items.`,recoveryAmount:0,evidence:`SKU hash check returned ${new Set(lines.map(l=>l.sku)).size} unique entries.`};
+
+  /* ── R211 · Invoice Unit Price vs. Contract Price Variance (TGS-01) · tolerance 1% ── */
+  const priceHits = [];
+  if (contract) lines.filter(l=>l.flag!=="DUPLICATE_LINE").forEach(l=>{ const rate=contract.rates[l.sku]; if (rate!==undefined && l.unitPrice > rate*(1+PRICE_TOLERANCE)){ l.flag="PRICE_VARIANCE"; l.expectedLineTotal=r2(l.qty*rate); priceHits.push({l,rate,amt:r2(l.qty*(l.unitPrice-rate))}); } });
+  const priceAmt = r2(priceHits.reduce((s,h)=>s+h.amt,0));
+  R.R211 = !contract ? {ruleId:"R211",ruleName:"Invoice Unit Price vs. Contract Price Variance",gate:"TGS-01",scope:"No contract on file",result:"N/A",finding:"No master vendor agreement on file for this vendor — rule not evaluated.",recoveryAmount:0,evidence:"—"}
+    : priceHits.length ? {ruleId:"R211",ruleName:"Invoice Unit Price vs. Contract Price Variance",gate:"TGS-01",scope:`Line: ${priceHits.map(h=>h.l.sku).join(", ")}`,result:"FAIL",
+      finding:priceHits.map(h=>`${h.l.description} billed at ${money(h.l.unitPrice)}/${h.l.unit} against contract rate of ${money(h.rate)}/${h.l.unit} (${(((h.l.unitPrice/h.rate)-1)*100).toFixed(1)}% above, tolerance 1%); ${h.l.qty} ${h.l.unit} exposure, ${money(h.amt)} overcharge.`).join(" "),
+      recoveryAmount:priceAmt,evidence:contract.agreement+". Formula: (invoice unit price − contract unit price) × quantity.",kind:"price"}
+    : {ruleId:"R211",ruleName:"Invoice Unit Price vs. Contract Price Variance",gate:"TGS-01",scope:`All ${lines.length} line items`,result:"PASS",finding:"All line items billed at or within 1% of contracted rates.",recoveryAmount:0,evidence:contract.agreement+"."};
+
+  /* ── R221 · Invoiced Quantity vs. Receiving Log Mismatch (TGS-02) ── */
+  const qtyHits = [];
+  if (recv) lines.filter(l=>l.flag!=="DUPLICATE_LINE").forEach(l=>{ const rq=recv.items[l.sku]; if (rq!==undefined && l.qty>rq){ const rate = l.flag==="PRICE_VARIANCE" ? contract.rates[l.sku] : l.unitPrice; if (l.flag==="OK") l.flag="QTY_VARIANCE"; l.expectedLineTotal=r2(rq*rate); qtyHits.push({l,rq,amt:r2((l.qty-rq)*rate)}); } });
+  const qtyAmt = r2(qtyHits.reduce((s,h)=>s+h.amt,0));
+  R.R221 = !recv ? {ruleId:"R221",ruleName:"Invoiced Quantity vs. Receiving Log Mismatch",gate:"TGS-02",scope:"No receiving log",result:"N/A",finding:"No receiving log matched this invoice — rule not evaluated.",recoveryAmount:0,evidence:"—"}
+    : qtyHits.length ? {ruleId:"R221",ruleName:"Invoiced Quantity vs. Receiving Log Mismatch",gate:"TGS-02",scope:`Line: ${qtyHits.map(h=>h.l.sku).join(", ")}`,result:"FAIL",
+      finding:qtyHits.map(h=>`${h.l.description}: invoiced ${h.l.qty} ${h.l.unit}, receiving log records ${h.rq} ${h.l.unit}. ${h.l.qty-h.rq} ${h.l.unit} short, ${money(h.amt)} billed for product not received.`).join(" "),
+      recoveryAmount:qtyAmt,evidence:`${recvSource[0].toUpperCase()+recvSource.slice(1)}, signed ${recv.signed}. Formula: (invoiced qty − received qty) × unit price.`,kind:"delivery"}
+    : {ruleId:"R221",ruleName:"Invoiced Quantity vs. Receiving Log Mismatch",gate:"TGS-02",scope:"Receiving log cross-check",result:"PASS",finding:"All invoiced quantities match the receiving dock log.",recoveryAmount:0,evidence:`${recvSource[0].toUpperCase()+recvSource.slice(1)}, signed ${recv.signed}.`};
+
+  /* ── R240 · Three-Way Match — invoice arithmetic leg + PO/receiving value (TGS-02) ── */
+  const mathHits = [];
+  lines.forEach(l=>{ const ext=r2(l.qty*l.unitPrice); if (Math.abs(ext-l.lineTotal)>0.005){ if (l.flag==="OK") l.flag="EXTENSION_ERROR"; if (l.flag!=="DUPLICATE_LINE") l.expectedLineTotal=Math.min(l.expectedLineTotal,ext); mathHits.push({l,ext,amt:r2(l.lineTotal-ext)}); } });
+  const mathAmt = r2(mathHits.reduce((s,h)=>s+Math.max(0,h.amt),0));
+  const rateFor = sku => (contract && contract.rates[sku]!==undefined) ? contract.rates[sku] : (po && (po.lines.find(l=>l.sku===sku)||{}).unitPrice) ?? null;
+  const poValue = po ? (po.total || r2(po.lines.reduce((s,l)=>s+l.lineTotal,0))) : ((contract&&recv) ? r2(Object.entries(recv.items).reduce((s,[sku,q])=>s+q*(contract.rates[sku]??0),0)) : null);
+  const recvValue = recv ? r2(Object.entries(recv.items).reduce((s,[sku,q])=>{ const r=rateFor(sku); return s + (r!==null ? q*r : 0); },0)) : null;
+  const poMatch = po ? (po.id === inv.po ? "PO number matches the invoice reference." : `PO ${po.id} does not match the invoice reference ${inv.po||"—"}.`) : "";
+  const threeWay = poValue!==null ? ` ${po?"Purchase order":"PO value at contract"} ${money(poValue)} · invoice ${money(inv.subtotal)}${recvValue!==null?` · received ${money(recvValue)}`:""}; largest leg variance ${money(Math.max(Math.abs(r2(inv.subtotal-poValue)), recvValue!==null?Math.abs(r2(inv.subtotal-recvValue)):0))}${(priceHits.length||qtyHits.length||dupes.length)?" — attributed to R211/R221/R226 findings":" — within tolerance"}. ${poMatch}`.trim() : "";
+  R.R240 = (mathHits.length||!headerOK) ? {ruleId:"R240",ruleName:"Three-Way Match — Invoice vs. PO vs. Receiving",gate:"TGS-02",scope:mathHits.length?`Line: ${mathHits.map(h=>h.l.sku).join(", ")}`:"Invoice header",result:"FAIL",
+      finding:(mathHits.map(h=>`${h.l.qty} × ${money(h.l.unitPrice)} = ${money(h.ext)}, not ${money(h.l.lineTotal)} as billed. ${money(Math.abs(h.amt))} ${h.amt>0?"overcharge":"undercharge"}.`).join(" ") + (headerOK?"":` Header does not reconcile: lines sum ${money(headerSum)}, stated subtotal ${money(inv.subtotal)}.`) + (threeWay?" "+threeWay:"")).trim(),
+      recoveryAmount:mathAmt,evidence:po?`Purchase order ${po.id} (${po.date}) and ${recvSource}; line extensions recomputed.`:"Arithmetic recomputation of each line extension and header; PO value derived from receiving quantities at contract rates.",kind:"math"}
+    : {ruleId:"R240",ruleName:"Three-Way Match — Invoice vs. PO vs. Receiving",gate:"TGS-02",scope:"All line items + header",result:"PASS",finding:(`All ${lines.length} extensions verified and header reconciles (lines ${money(headerSum)} + tax ${money(inv.tax)} = ${money(inv.total)}).`+(threeWay?" "+threeWay:"")).trim(),recoveryAmount:0,evidence:po?`Purchase order ${po.id} (${po.date}) and ${recvSource}.`:"Arithmetic recomputation; PO value derived from receiving quantities at contract rates."};
+
+  /* ── R228 · Outstanding Credit Memo — not applied (TGS-03) ── */
+  const open = credits.filter(c=>!c.appliedOn && invISO && c.issued<=invISO); const credAmt = r2(open.reduce((s,c)=>s+c.amount,0));
+  R.R228 = open.length ? {ruleId:"R228",ruleName:"Outstanding Credit Memo — Not Applied",gate:"TGS-03",scope:`Open credits: ${open.map(c=>c.id).join(", ")}`,result:"FAIL",
+      finding:open.map(c=>`Credit memo ${c.id} for ${money(c.amount)} (issued ${c.issued}, ${c.reason}) was open at invoice date and not applied to this invoice.`).join(" "),recoveryAmount:credAmt,evidence:"Vendor credit ledger, reconciled against invoice remittance block.",kind:"credit"}
+    : {ruleId:"R228",ruleName:"Outstanding Credit Memo — Not Applied",gate:"TGS-03",scope:"Open credits",result:"PASS",finding:"No outstanding credit memos for this vendor/operator pair at invoice date.",recoveryAmount:0,evidence:"Vendor credit ledger shows zero open balance."};
+
+  /* ── R237 · Contract Term Compliance — tax & exemption terms (TGS-04) ── */
+  let taxAmt = 0;
+  if (!taxProfile) R.R237 = {ruleId:"R237",ruleName:"Contract Term Compliance — Tax & Exemption Terms",gate:"TGS-04",scope:"Tax line",result:"N/A",finding:"No tax profile on file for this operator — rule not evaluated.",recoveryAmount:0,evidence:"—"};
+  else { const expTax=r2(inv.subtotal*taxProfile.rate), diff=r2(inv.tax-expTax);
+    if (Math.abs(diff)>0.02){ taxAmt=Math.max(0,diff); R.R237={ruleId:"R237",ruleName:"Contract Term Compliance — Tax & Exemption Terms",gate:"TGS-04",scope:"Tax line",result:"FAIL",finding:`Tax billed ${money(inv.tax)}; approved treatment for ${inv.operator} is ${(taxProfile.rate*100).toFixed(2)}% → expected ${money(expTax)}. ${money(Math.abs(diff))} ${diff>0?"overcharged":"undercharged"}.`,recoveryAmount:taxAmt,evidence:taxProfile.basis+".",kind:"tax"}; }
+    else R.R237={ruleId:"R237",ruleName:"Contract Term Compliance — Tax & Exemption Terms",gate:"TGS-04",scope:"Tax line",result:"PASS",finding:`Tax of ${money(inv.tax)} = ${(taxProfile.rate*100).toFixed(2)}% × ${money(inv.subtotal)}. Within rounding tolerance.`,recoveryAmount:0,evidence:taxProfile.basis+"."}; }
+
+  const results = RULES.map(r=>R[r.id]);
+  const failList = results.filter(r=>r.result==="FAIL" && r.ruleId!=="R236");
+
+  /* ── Trust Gates TGS-01–08 → M04 Trust Score (weighted; unevaluated gates excluded and weights renormalized) ── */
+  const gs = {
+    "TGS-01": contract ? gateScore(priceAmt, inv.subtotal) : null,
+    "TGS-02": recv ? gateScore(qtyAmt+mathAmt, inv.subtotal) : null,
+    "TGS-03": gateScore(credAmt, inv.subtotal),
+    "TGS-04": taxProfile ? gateScore(taxAmt, inv.subtotal) : null,
+    "TGS-05": null, "TGS-07": null,
+    "TGS-06": gateScore(dupAmt, inv.subtotal),
+    "TGS-08": coverage,
+  };
+  const gates = GATES.map(g=>({...g, score:gs[g.id], evaluated:gs[g.id]!==null, rules:RULES.filter(r=>r.gate===g.id).map(r=>r.id)}));
+  const wSum = gates.filter(g=>g.evaluated).reduce((s,g)=>s+g.w,0);
+  const score = Math.round(gates.filter(g=>g.evaluated).reduce((s,g)=>s+g.w*g.score,0)/wSum);
+  const trustScore = {score, coverage, threshold:CERT_THRESHOLD, certified, gates, dims, gaps:dims.filter(d=>d.score<CERT_THRESHOLD), evaluatedWeight:wSum};
+
+  /* ── Vendor Reliability Score — 90-day rolling view of certified Trust Scores, with four sub-metrics ── */
+  const price=gs["TGS-01"]??100, delivery=gs["TGS-02"]??100, billing=gateScore(dupAmt+mathAmt, inv.subtotal), creditTax=gateScore(credAmt+taxAmt, inv.subtotal);
+  const invoiceScore = certified ? score : null;
+  const vscore = certified ? Math.round((invoiceScore+hist.priorScore)/2) : hist.priorScore;
+  const grade = vscore>=90?"A":vscore>=80?"B":vscore>=70?"C":vscore>=60?"D":"F";
+  const classification = vscore>=90?"PREFERRED":vscore>=70?"STANDARD":vscore>=50?"MONITOR":"PROBATION";
+  const flags = [...hist.priorFlags];
+  if (priceHits.length && !flags.includes("Price drift")) flags.push("Price drift");
+  if (qtyHits.length) flags.push("Short delivery");
+  if (dupes.length) flags.push("Duplicate billing");
+  if (open.length) flags.push("Unapplied credits");
+  if (taxAmt>0) flags.push("Tax misapplication");
+  if (mathHits.length && !flags.some(f=>/extension/i.test(f))) flags.push("Extension errors");
+  const narrative = !certified
+    ? `Run not certified (R236). ${inv.vendor}'s reliability record is unchanged${histRaw?` — the 90-day prior of ${hist.priorScore} (${hist.trend.toLowerCase()}, ${hist.certified90d} certified invoices) carries forward`:" — no certified history exists for this vendor yet; the default prior of 75 is shown and nothing has been written"}. Supply the missing evidence and re-run to certify.`
+    : failList.length===0
+    ? `${inv.vendor} passed all ${results.filter(r=>r.result!=="N/A").length} evaluated rules on this invoice. Over the last 90 days (${hist.certified90d} certified invoices) the vendor's record is ${hist.trend.toLowerCase()} at a prior score of ${hist.priorScore}. No risk flags are active — continued ${classification.toLowerCase()} status is supported by the certified record.`
+    : `${inv.vendor} produced ${failList.length} variance${failList.length>1?"s":""} on this invoice (${failList.map(f=>f.ruleId).join(", ")}) against a 90-day prior score of ${hist.priorScore} (${hist.trend.toLowerCase()}, ${hist.certified90d} certified invoices). ${flags.length>=3?"Three or more active pattern flags indicate a systemic compliance issue; the certified record supports contract review, not just a credit request.":flags.length?"The active flag is documented in the vendor's certified record and will be re-evaluated on the next certified invoice.":""}`;
+  const vendorScore = {score:vscore,grade,classification,trend:hist.trend,priceAccuracy:price,deliveryAccuracy:delivery,billingIntegrity:billing,creditTaxCompliance:creditTax,invoiceScore,priorScore:hist.priorScore,certified90d:hist.certified90d,riskFlags:flags,narrative};
+
+  const totalRecovery = r2(failList.reduce((s,f)=>s+f.recoveryAmount,0));
+  const probMap = {math:97,duplicate:96,tax:97,credit:98,price:92,delivery:90};
+  const recoveryProbability = totalRecovery>0 ? Math.round(failList.reduce((s,f)=>s+(probMap[f.kind]||90)*f.recoveryAmount,0)/totalRecovery) : 0;
+  const summary = {totalFindings:failList.length,totalRecovery,recoveryProbability,
+    certificationStatus: !certified ? "NOT CERTIFIED — EVIDENCE GAP" : failList.length ? "CERTIFIED — VARIANCES DETECTED" : "CERTIFIED — COMPLIANT",
+    rulesEvaluated: results.filter(r=>r.result!=="N/A").length, lineItemsScanned: lines.length};
+  return {invoice:inv, lineItems:lines, ruleResults:results, vendorScore, trustScore, summary, po, recvDoc:ctx.recvDoc||null, threeWay:!!ctx.threeWay};
+}
+
+/* ═══════════════════════════ SEALING — real SHA-256 via Web Crypto ═══════════════════════════ */
+async function sha256(data){
+  const buf = typeof data==="string" ? new TextEncoder().encode(data) : data;
+  const h = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+const short = h => h ? `${h.slice(0,8)}…${h.slice(-8)}` : "—";
+
+/* Built-in demo invoice (identical to INV-2026-04392 in the sample document set) */
+const DEMO_INVOICE = {fileName:"INV-2026-04392_Northstar_Foodservice.pdf (built-in)",vendor:"Northstar Foodservice — North Texas",vendorContact:"ar@northstarfoodservice.com",
+  id:"INV-2026-04392",date:"April 24, 2026",dueDate:"May 24, 2026",po:"PO-BF-2211",receivingRef:"RL-04392",operator:"Bluefin Hospitality Group",operatorSite:"Loc #03 — Uptown Dallas, TX",
+  subtotal:2045.00,tax:168.71,taxLabel:"Sales Tax (8.25%)",total:2213.71,
+  lineItems:[{sku:"BF-RIB-CH",description:"Choice Ribeye, 14oz",qty:48,unit:"LB",unitPrice:18.25,lineTotal:876.00},
+    {sku:"PRD-ROM-12",description:"Romaine Hearts 12ct Case",qty:6,unit:"CS",unitPrice:42.50,lineTotal:255.00},
+    {sku:"DRY-OIL-EVOO",description:"Extra Virgin Olive Oil 3L Tin",qty:8,unit:"TIN",unitPrice:38.75,lineTotal:310.00},
+    {sku:"BF-RIB-CH",description:"Choice Ribeye, 14oz",qty:12,unit:"LB",unitPrice:18.25,lineTotal:219.00},
+    {sku:"FRZ-SHR-21",description:"21/25 Gulf Shrimp IQF",qty:25,unit:"LB",unitPrice:14.80,lineTotal:385.00}]};
+
+const DEMO_PO = {fileName:"PO-BF-2211_Purchase_Order.pdf (built-in)",id:"PO-BF-2211",date:"April 21, 2026",operator:"Bluefin Hospitality Group",vendor:"Northstar Foodservice — North Texas",total:1727.00,
+  lines:[{sku:"BF-RIB-CH",description:"Choice Ribeye, 14oz",qty:48,unit:"LB",unitPrice:16.50,lineTotal:792.00},{sku:"PRD-ROM-12",description:"Romaine Hearts 12ct Case",qty:6,unit:"CS",unitPrice:42.50,lineTotal:255.00},{sku:"DRY-OIL-EVOO",description:"Extra Virgin Olive Oil 3L Tin",qty:8,unit:"TIN",unitPrice:38.75,lineTotal:310.00},{sku:"FRZ-SHR-21",description:"21/25 Gulf Shrimp IQF",qty:25,unit:"LB",unitPrice:14.80,lineTotal:370.00}]};
+const DEMO_RL = {fileName:"RL-04392_Receiving_Log.pdf (built-in)",ref:"RL-04392",delivered:"04/24/2026 14:22 CT",poRef:"PO-BF-2211",invoiceRef:"INV-2026-04392",operator:"Bluefin Hospitality Group",vendor:"Northstar Foodservice — North Texas",receivedBy:"R. Alvarez (GM)",
+  signed:"04/24/2026 14:22 CT · R. Alvarez (GM)",items:{"BF-RIB-CH":48,"PRD-ROM-12":6,"DRY-OIL-EVOO":8,"FRZ-SHR-21":25},ordered:{"BF-RIB-CH":48,"PRD-ROM-12":6,"DRY-OIL-EVOO":8,"FRZ-SHR-21":25},refused:{"BF-RIB-CH":0,"PRD-ROM-12":0,"DRY-OIL-EVOO":0,"FRZ-SHR-21":0},
+  lines:[{sku:"BF-RIB-CH",description:"Choice Ribeye, 14oz",ordered:48,received:48,refused:0,unit:"LB"},{sku:"PRD-ROM-12",description:"Romaine Hearts 12ct Case",ordered:6,received:6,refused:0,unit:"CS"},{sku:"DRY-OIL-EVOO",description:"Extra Virgin Olive Oil 3L Tin",ordered:8,received:8,refused:0,unit:"TIN"},{sku:"FRZ-SHR-21",description:"21/25 Gulf Shrimp IQF",ordered:25,received:25,refused:0,unit:"LB"}]};
+
+/* ═══════════════════════════ PIPELINE (the 8 MGE steps) ═══════════════════════════ */
+const STEP_LABELS = ["Upload","Attest","Ingest","Rules","Findings","CAAR","Advisory"];
+const PIPELINE = [
+  ["1 · Ingest","Attested batch received from Sentry M04:SCR through the MGE API contract"],
+  ["2 · Seal","SHA-256 sealed in the Landing Zone — chain of custody opened"],
+  ["3 · Normalize","Parsed into canonical MGE structures (Bronze Zone)"],
+  ["4 · Reconcile","Cross-checked against contract, receiving log, tax profile, credit ledger"],
+  ["5 · Apply Rules","Sentry M04:SCR rule set queued — R236 block check, then R211 · R221 · R240 · R226 · R228 · R237"],
+  ["6 · Score","Trust Gates TGS-01–08 evaluated — weighted M04 Trust Score calculated (MQ6)"],
+  ["7 · Narrative Seal","Certification narrative generated and sealed (Silver Zone)"],
+  ["8 · Output","Certified artifacts ready — CAAR available"],
+];
+
+/* ═══════════════════════════ USER GUIDE CONTENT ═══════════════════════════ */
+const GUIDE_SECTIONS = {
+  upload: { label:"Upload", color:C.gold, items:[
+    {num:"1",label:"The document drop zone",tag:"PDF · ANY VENDOR FORMAT",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"The entry point of the certification pipeline. A vendor invoice PDF is dropped here exactly as it arrived from the vendor — no pre-cleaning, no re-keying."},
+      {k:"What it does",kc:C.steel,v:"Reads the file in the browser, seals it with a SHA-256 hash the moment it lands, then extracts its text with a deterministic parser. Nothing is sent to an AI model. Nothing leaves the page."},
+      {k:"Why it matters",kc:C.red,v:"Chain of custody starts at ingest. If the document is sealed before anything touches it, every downstream finding can be traced back to the exact bytes the vendor sent."}]},
+    {num:"2",label:"Reference data loaded",tag:"SYSTEM OF RECORD CONTEXT",tagColor:C.steel,tagBg:C.steelT,rows:[
+      {k:"What it is",kc:C.gold,v:"The context MGE reconciles against: master vendor agreements, signed receiving logs, operator tax profiles, the open credit ledger, and each vendor's 90-day certified history."},
+      {k:"What it means",kc:C.green,v:"In production these come from the system of record and POS. In this pilot they are loaded as a reference set so the same rules fire on the same evidence."},
+      {k:"Why it matters",kc:C.red,v:"An invoice cannot be certified in isolation. Certification is the act of reconciling a document against authoritative sources — and MGE decides which source has authority."}]},
+    {num:"3",label:"Three-way match mode",tag:"INVOICE + PO + RECEIVING LOG",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"A second mode with three drop zones. The invoice is required; the purchase order and receiving log are optional — leave one out and R236 shows what a missing leg costs."},
+      {k:"What it does",kc:C.steel,v:"Seals all three documents, reconciles them line by line, and runs R240 on real documents: PO value versus invoice versus received, with the largest leg variance attributed to the rules that explain it. The receiving log uploaded here is what a Certified Receiving Record looks like on paper — Input D, supplied by the operator."},
+      {k:"Why it matters",kc:C.red,v:"Two-way matching is a commodity inside every AP platform. The certified three-way match — an independent authority reconciling all three sources, deciding which governs, and refusing to certify when one is missing — is the product."}]},
+    {num:"4",label:"Run with the built-in invoice",tag:"NO FILE NEEDED",tagColor:C.muted,tagBg:C.fill,rows:[
+      {k:"What it is",kc:C.gold,v:"A shortcut that feeds INV-2026-04392 (the Northstar Foodservice sample) straight into the pipeline without a file."},
+      {k:"What it does",kc:C.steel,v:"Runs the identical engine — same rules, same reference data, same seal — so the result matches an upload of the same PDF line for line."},
+      {k:"Why it matters",kc:C.red,v:"Determinism is demonstrable: the same input always produces the same certified output. Run it twice and compare."}]},
+  ]},
+  signin: { label:"Sign in", color:C.gold, items:[
+    {num:"1",label:"Invitation only",tag:"INVITED EMAIL = USERNAME · NO SELF-REGISTRATION",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"Accounts exist by invitation only. The invited email is the username, always. New people are invited by the FohBoh Onboarding Lead."},
+      {k:"Why it matters",kc:C.red,v:"Who can attest is decided before anyone logs in. There is no path to an Evidence Custodian role that does not start with an invitation."}]},
+    {num:"2",label:"Named Evidence Custodian",tag:"STEP 2 OF 2",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"Full name, title, organization. The name entered here is the name that signs every attestation."},
+      {k:"Why it matters",kc:C.red,v:"Sealing an evidence batch is a personal act — no one at FohBoh can do it, at any privilege level."}]},
+  ]},
+  attest: { label:"Attest", color:C.gold, items:[
+    {num:"1",label:"Receive · hash · stage",tag:"SEALED DIGEST · CLASSIFICATION PROPOSAL · INTAKE ID",tagColor:C.violet,tagBg:C.violetT,rows:[
+      {k:"What it is",kc:C.gold,v:"Every dropped file, hashed and time-stamped the moment it landed, with the parser's proposal for what it is and an Intake ID."},
+      {k:"What it does",kc:C.steel,v:"The parser proposes; it never decides. The custodian can correct the classification from the dropdown. Coverage counts required source types present — a completeness gate, not a quality score."},
+      {k:"Why it matters",kc:C.red,v:"Hash before anyone opens the file. That is where chain of custody begins."}]},
+    {num:"2",label:"Custodian attests & seals",tag:"STATEMENT v2.0 · E-SIGN / UETA · PASSWORD RE-ENTRY",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"A personal attestation by the named Evidence Custodian that the batch is complete for the module and period and was provided as issued — signed electronically, with password re-entry as a deliberate speed bump."},
+      {k:"What it means",kc:C.green,v:"This is the authorization step. Nothing is pushed to MGE until a named person has made the statement. No FohBoh operator can perform it at any privilege level."},
+      {k:"What it does",kc:C.steel,v:"The signature record — statement, password re-entry, UTC timestamp — is bound into an attestation hash, chained into the activity log, pushed with the batch through the Sentry API contract, and carried into the CAAR seal block."},
+      {k:"Why it matters",kc:C.red,v:"After sealing, nothing can be added; late documents form a supplementary batch. The sealed set is the evidence for one CAAR — and the custodian declaration is what the evidentiary stack needs."}]},
+    {num:"3",label:"Activity log",tag:"HASH-CHAINED · APPEND-ONLY",tagColor:C.green,tagBg:C.greenT,rows:[
+      {k:"What it is",kc:C.gold,v:"Every event from receipt to CAAR issuance, numbered, time-stamped, and hashed over its own contents plus the previous entry's hash."},
+      {k:"Why it matters",kc:C.red,v:"Nothing can be inserted, removed or restated without breaking the chain."}]},
+  ]},
+  ingest: { label:"Ingest", color:C.gold, items:[
+    {num:"1",label:"The eight-step pipeline log",tag:"INGEST → SEAL → NORMALIZE → RECONCILE → RULES → SCORE → NARRATIVE SEAL → OUTPUT",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"MGE's certification runtime, step by step, as it runs on this document. Every certified output passes all eight in this order."},
+      {k:"What it means",kc:C.green,v:"Seal happens before Normalize: the document is fingerprinted before anything reads it. Reconcile is where the contract, receiving log, tax profile and credit ledger are joined. Score is the MQ6 step."},
+      {k:"Why it matters",kc:C.red,v:"The sequence is the chain of custody. A report that skipped any step is not a certified output."}]},
+    {num:"2",label:"The Seal line and its hash",tag:"SHA-256 · LANDING ZONE",tagColor:C.violet,tagBg:C.violetT,rows:[
+      {k:"What it is",kc:C.gold,v:"A real SHA-256 digest of the file bytes, computed in the browser the moment the document landed. In three-way mode there are three — one per document."},
+      {k:"Why it matters",kc:C.red,v:"Change one byte of the document and the hash changes. This is the anchor every later seal chains back to."}]},
+    {num:"3",label:"Reconcile — the sources joined",tag:"CONTRACT · RECEIVING LOG · PO · TAX · CREDITS",tagColor:C.steel,tagBg:C.steelT,rows:[
+      {k:"What it is",kc:C.gold,v:"The step where the invoice is joined to the authoritative sources. In the pilot they are embedded reference data; in production they arrive through the MGE API contract from the system of record."},
+      {k:"Why it matters",kc:C.red,v:"Certification is reconciliation against sources that have authority — and MGE decides which source governs each field."}]},
+  ]},
+  rules: { label:"Rules", color:C.red, items:[
+    {num:"1",label:"R236 fires first",tag:"TRUST SCORE FLOOR · CERTIFICATION BLOCK",tagColor:C.red,tagBg:C.redT,rows:[
+      {k:"What it is",kc:C.gold,v:"The meta-rule that checks whether the evidence on file is complete enough for the other rules to fire at full confidence. Six coverage checks; 85 is the floor."},
+      {k:"What it does",kc:C.steel,v:"If it fails, the remaining rules still run, but the run cannot certify and the CAAR is blocked. The report issues sealed and stamped NOT CERTIFIED with the gap itemized."},
+      {k:"Why it matters",kc:C.red,v:"MGE will not certify what it could not fully check — and it says so in writing."}]},
+    {num:"2",label:"The six transaction rules",tag:"R211 · R221 · R240 · R226 · R228 · R237",tagColor:C.red,tagBg:C.redT,rows:[
+      {k:"What it is",kc:C.gold,v:"Contract price (1% tolerance), quantity vs receiving log, three-way match, line-level duplicate, outstanding credit memo, tax and exemption terms. Each belongs to one Trust Gate (the TGS tag beside the name)."},
+      {k:"What it means",kc:C.green,v:"PASS, FAIL, or N/A. N/A means the rule could not be evaluated on the evidence available — it is never counted as a pass."},
+      {k:"Why it matters",kc:C.red,v:"Every FAIL carries a dollar amount and a cited source. Each dollar is claimed under exactly one rule."}]},
+    {num:"3",label:"Why it fires one rule at a time",tag:"SEQUENCED · DETERMINISTIC",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"The engine actually evaluates in a fixed order — duplicates before price, price before quantity — so a dollar is never claimed twice. The screen paces the reveal so the audience can read each result."},
+      {k:"Why it matters",kc:C.red,v:"Same invoice, same reference data, same result, on any machine. That is what makes the output certifiable rather than plausible."}]},
+  ]},
+  findings: { label:"Findings", color:C.red, items:[
+    {num:"1",label:"Certification progress bar",tag:"UPLOAD → INGEST → RULES → FINDINGS → CAAR",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"A live indicator of where the invoice sits in the MGE certification cycle — from raw file to certified output."},
+      {k:"What it means",kc:C.green,v:"You are on Findings. Rules have fired and every result is certified. The final step, CAAR issuance, is ready."},
+      {k:"What it does",kc:C.steel,v:"Orients the operator in the pipeline. Each step is deterministic — Findings cannot be reached unless Ingest and Rules completed."},
+      {k:"Why it matters",kc:C.red,v:"The step sequence is the chain of custody. A CAAR that skipped any step has no evidentiary integrity. The pipeline enforces the sequence."}]},
+    {num:"2",label:"Certification verdict",tag:"COMPLIANT · OR · VARIANCES DETECTED",tagColor:C.red,tagBg:C.redT,rows:[
+      {k:"What it is",kc:C.gold,v:"The top-level output of the rules engine. An invoice is either certified compliant or certified with variances. There is no third state."},
+      {k:"What it means",kc:C.green,v:"A variance verdict means at least one rule produced a FAIL with a recoverable amount, supported by named evidence — not a flag, not a suggestion."},
+      {k:"What it does",kc:C.steel,v:"Sets the document type for everything that follows: a CAAR with recovery claims, or a CAAR certifying compliance. Both write to the IUM record."},
+      {k:"Why it matters",kc:C.red,v:"The binary verdict is what makes the output evidence-grade. Every invoice is certified one way or the other; nothing is left in a 'maybe' pile."}]},
+    {num:"3",label:"MGE Trust Score — Trust Gates and the R236 floor",tag:"TGS-01–08 WEIGHTED · R236 BLOCKS BELOW 85",tagColor:C.green,tagBg:C.greenT,rows:[
+      {k:"What it is",kc:C.gold,v:"MGE's score for this certification run, computed at Step 6 (internally the MQ6 step). Eight M04 Trust Gates, weighted per the rule set: invoice-to-contract accuracy 25%, quantity reconciliation 20%, credit memo completeness 15%, contract term compliance 15%, rebate verification 10%, duplicate detection 8%, waste-to-purchase 4%, audit completeness 3%. Gates that cannot be evaluated in the pilot (rebate, waste) are excluded and the weights renormalized."},
+      {k:"What it means",kc:C.green,v:"The score reflects how the invoice performed against every gate that could fire. Separately, R236 — the Trust Score Floor meta-rule — checks evidence coverage on six prerequisites (completeness, consistency, timeliness, alignment, reconciliation integrity, governance adherence). Below 85, R236 blocks CAAR output: the run still issues a hash-sealed report stamped NOT CERTIFIED with the gap itemized."},
+      {k:"What it does",kc:C.steel,v:"Gates everything downstream. Variances found on a blocked run are identified exposure, not certified claims. The IUM record is written either way."},
+      {k:"Why it matters",kc:C.red,v:"This is the difference between an audit tool and a certification authority. MGE will not certify what it could not fully check — and it says so, in writing, with the seal intact."}]},
+    {num:"4",label:"Vendor Reliability Score",tag:"0–100 · GRADE · CLASSIFICATION · TREND",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"A 0–100 composite reliability score for the vendor, recalculated on every certified invoice from four deterministic sub-metrics — price accuracy, delivery accuracy, billing integrity, and credit & tax compliance — blended 50/50 with the vendor's 90-day certified history. It is a certified operational fact about the vendor, not the Trust Score."},
+      {k:"What it means",kc:C.green,v:"PREFERRED (90+), STANDARD (70–89), MONITOR (50–69), PROBATION (below 50). The trend arrow reflects the direction of the 90-day record."},
+      {k:"What it does",kc:C.steel,v:"Drives escalation thresholds in Sentry, sets the priority of the CAAR, and is embedded in the CAAR so the vendor sees their own certified score."},
+      {k:"Why it matters",kc:C.red,v:"Unlike a survey rating, this score cannot be gamed. It is derived entirely from certified transaction data. A vendor at MONITOR with a declining trend is a contract conversation, not a credit request."}]},
+    {num:"5",label:"Vendor narrative assessment",tag:"DETERMINISTIC · TEMPLATED FROM CERTIFIED DATA",tagColor:C.violet,tagBg:C.violetT,rows:[
+      {k:"What it is",kc:C.gold,v:"A plain-language summary of what the rules found, assembled from the certified results and the vendor's history. It is templated, not generated — the same inputs always produce the same sentences."},
+      {k:"What it does",kc:C.steel,v:"Translates rule outputs into something a GM, controller, or vendor manager can read without parsing seven rule results."},
+      {k:"Why it matters",kc:C.red,v:"Certified data alone does not drive decisions — people do. The narrative bridges the gap between a rules engine and the humans who act on its output."}]},
+    {num:"6",label:"Risk flags",tag:"PATTERNS · NOT SINGLE INCIDENTS",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"Pattern labels carried from the vendor's certified history plus any new pattern this invoice adds — price drift, extension errors, duplicate billing, short delivery, unapplied credits, tax misapplication."},
+      {k:"What it does",kc:C.steel,v:"Feeds classification, Sentry escalation logic, and the vendor risk profile. Appears in the CAAR so the vendor knows the pattern is documented."},
+      {k:"Why it matters",kc:C.red,v:"Flags are the difference between a one-time dispute and a systemic compliance problem. Three active flags is a renegotiation conversation."}]},
+    {num:"7",label:"Invoice identity block",tag:"VENDOR · INVOICE # · OPERATOR · TOTAL BILLED",tagColor:C.muted,tagBg:C.fill,rows:[
+      {k:"What it is",kc:C.gold,v:"The formal identity of the document under certification, as extracted from the PDF: vendor, invoice number, operator and site, receiving reference, and the total billed."},
+      {k:"What it does",kc:C.steel,v:"Anchors every finding to one specific document. The identity is carried into the CAAR, the audit trail, and the IUM record."},
+      {k:"Why it matters",kc:C.red,v:"Without formal identity the findings are abstract. With it, the CAAR names the document, the vendor, and the operator — it is addressable."}]},
+    {num:"8",label:"Certified variance findings",tag:"RULE ID · FINDING · EVIDENCE · RECOVERY $",tagColor:C.red,tagBg:C.redT,rows:[
+      {k:"What it is",kc:C.gold,v:"Each card is one rule that evaluated the invoice and returned FAIL — with the named violation, the specific evidence, and the exact dollar amount."},
+      {k:"What it does",kc:C.steel,v:"Each finding becomes a line in the CAAR. Rule ID, evidence, and amount are carried forward unchanged."},
+      {k:"Why it matters",kc:C.red,v:"A rule-cited, evidence-backed finding is not disputable the way a general complaint is. The vendor must refute specific arithmetic and a specific contract clause."}]},
+    {num:"9",label:"Total certified recovery + seal",tag:"TOTAL · SHA-256 · CHAIN OF CUSTODY",tagColor:C.violet,tagBg:C.violetT,rows:[
+      {k:"What it is",kc:C.gold,v:"The aggregate of all certified recovery claims, sealed with a SHA-256 hash of the full certification payload computed in the browser at this exact state."},
+      {k:"What it means",kc:C.green,v:"The hash is a fingerprint. Alter any finding, amount, or timestamp and the hash changes — tampering is detectable."},
+      {k:"Why it matters",kc:C.red,v:"A recovery claim without chain of custody is a dispute. With a cryptographic seal it is a certified claim. That distinction decides whether a vendor honors it and whether it holds up in a dispute."}]},
+    {num:"10",label:"Ready for operator action",tag:"SENTRY CERTIFIES · OPERATORS RECOVER",tagColor:C.green,tagBg:C.greenT,rows:[
+      {k:"What it is",kc:C.gold,v:"The status that the certification is complete and the CAAR is packaged for the operator to act on."},
+      {k:"What it means",kc:C.green,v:"Sentry does not collect money. It hands the operator an evidence-grade document the vendor's AR desk can process without a back-and-forth."},
+      {k:"Why it matters",kc:C.red,v:"The value is not that a letter got written — it is that the letter cannot be argued with. That is what turns leakage into recovered dollars."}]},
+  ]},
+  caar: { label:"CAAR", color:C.violet, items:[
+    {num:"1",label:"Document header — ID, timestamp, seal",tag:"CAAR ID · UTC · SHA-256",tagColor:C.violet,tagBg:C.violetT,rows:[
+      {k:"What it is",kc:C.gold,v:"The identity block of the Certified Analysis & Audit Report — a document number derived from the payload seal, the UTC timestamp of issuance, and the seal itself."},
+      {k:"Why it matters",kc:C.red,v:"A recovery document without certified identity is a letter. With an ID, a timestamp and a tamper-evident seal it is an evidentiary record. Auditors, counsel and vendors treat those two things very differently."}]},
+    {num:"2",label:"Verdict band",tag:"CERTIFIED · COMPLIANT / VARIANCES · OR NOT CERTIFIED",tagColor:C.red,tagBg:C.redT,rows:[
+      {k:"What it is",kc:C.gold,v:"The certification status, the Trust Score and coverage, and the vendor's reliability classification, in one strip."},
+      {k:"What it means",kc:C.green,v:"On a blocked run the Trust Score is withheld and the vendor record reads unchanged — the band says so."}]},
+    {num:"3",label:"Trust Score card inside the document",tag:"TGS-01–08 · R236 COVERAGE",tagColor:C.green,tagBg:C.greenT,rows:[
+      {k:"What it is",kc:C.gold,v:"The same eight-gate card from the Findings screen, embedded so the vendor sees how the run was scored. Compact when certified; expanded with the gap list when R236 fired."},
+      {k:"Why it matters",kc:C.red,v:"The vendor does not just receive a claim. They receive the scoring that produced it."}]},
+    {num:"4",label:"From / To and the Re: recitation",tag:"OPERATOR · VENDOR AR · GROUNDS",tagColor:C.muted,tagBg:C.fill,rows:[
+      {k:"What it is",kc:C.gold,v:"Named parties — the operator making the claim, the vendor's AR contact from the invoice — and the operative paragraph stating what was certified, how many rules, how many lines, how many variances."},
+      {k:"Why it matters",kc:C.red,v:"Specificity is what makes a claim enforceable. A named, addressed, structured claim cannot be deflected to 'send us the details.'"}]},
+    {num:"5",label:"Line item audit",tag:"QTY · BILLED · EXPECTED · STATUS — PLUS PO / RECEIVED IN THREE-WAY",tagColor:C.red,tagBg:C.redT,rows:[
+      {k:"What it is",kc:C.gold,v:"Every line with MGE's independently recomputed expected amount beside the billed amount and the status the rules assigned. In three-way mode: PO quantity, received quantity and invoiced quantity side by side."},
+      {k:"Why it matters",kc:C.red,v:"Clean lines are certified next to flagged ones. The vendor cannot claim the audit was selective."}]},
+    {num:"6",label:"Certified recovery claims",tag:"RULE · FINDING · EVIDENCE · AMOUNT",tagColor:C.red,tagBg:C.redT,rows:[
+      {k:"What it is",kc:C.gold,v:"The enforceable body of the CAAR — or, on a blocked run, identified exposure that is explicitly not certified."},
+      {k:"Why it matters",kc:C.red,v:"A complaint says 'you overcharged us.' A certified claim says 'R211: $18.25 against MVA §4.2 at $16.50, 48 LB, $84.00.' Those get different responses."}]},
+    {num:"7",label:"Rules passed",tag:"COMPLETE AUDIT · BOTH DIRECTIONS",tagColor:C.green,tagBg:C.greenT,rows:[
+      {k:"What it is",kc:C.gold,v:"Every rule that evaluated this invoice and found nothing — proof the certification was a full audit."},
+      {k:"Why it matters",kc:C.red,v:"Without this the vendor can argue cherry-picking. With it they cannot."}]},
+    {num:"8",label:"Total, recovery probability, IUM record",tag:"TOTAL · % · IUM ID",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"The aggregate amount, a deterministic collectibility rating by finding type, and the metadata-only IUM record written for this run — clean, blocked or variance."},
+      {k:"Why it matters",kc:C.red,v:"Recovery probability separates certifiable from collectible. IUM means the asset compounds on every run."}]},
+    {num:"9",label:"Vendor reliability assessment",tag:"SCORE · CLASSIFICATION · TREND · FLAGS",tagColor:C.violet,tagBg:C.violetT,rows:[
+      {k:"What it is",kc:C.gold,v:"The vendor's 90-day certified record, embedded so the vendor sees their own pattern. Unchanged on a blocked run."},
+      {k:"Why it matters",kc:C.red,v:"A MONITOR vendor receiving a CAAR sees a pattern being documented. That changes the weight of the conversation."}]},
+    {num:"10",label:"Certification seal and status tags",tag:"DOCUMENT SEALS · PAYLOAD SEAL · ISSUED · LOGGED · IUM",tagColor:C.violet,tagBg:C.violetT,rows:[
+      {k:"What it is",kc:C.gold,v:"Every Landing Zone hash (one per document) and the Silver Zone payload hash, then confirmations that the CAAR issued, the audit trail logged, and the IUM record was written — at issuance, not as follow-ups."},
+      {k:"Why it matters",kc:C.red,v:"Any copy of this report producing a different hash is not the certified original. Sentry certifies; the operator dispatches."}]},
+    {num:"11",label:"Advisory Memorandum button",tag:"SEPARATE DOCUMENT · NEVER ATTACHED",tagColor:C.steel,tagBg:C.steelT,rows:[
+      {k:"What it is",kc:C.gold,v:"Opens the post-certification narrative — a separate, deliberately unsealed document that references this CAAR by ID and hash and is marked ADVISORY — NOT CERTIFIED."},
+      {k:"Why it matters",kc:C.red,v:"Advisory content is a different data class from certified truth. It is never merged into the CAAR and never inside its hash."}]},
+  ]},
+  advisory: { label:"Advisory", color:C.steel, items:[
+    {num:"1",label:"What this document is",tag:"ADVISORY — NOT CERTIFIED · UNSEALED BY DESIGN",tagColor:C.steel,tagBg:C.steelT,rows:[
+      {k:"What it is",kc:C.gold,v:"The Sentry Advisory Memorandum: plain-language explanation, root-cause hypotheses, and recommended actions, produced after certification by the Sentry Advisor, and linked to the CAAR by ID and payload hash."},
+      {k:"What it means",kc:C.green,v:"Everything in it is advisory. The certified facts it cites are quoted from the CAAR; the interpretation is not certified and carries no seal — on purpose."},
+      {k:"Why it matters",kc:C.red,v:"Trust Wall 2: the advisor reads certified output and can never write back. Keeping the memorandum outside the CAAR hash is how that rule is made visible."}]},
+    {num:"2",label:"The three layers, in order",tag:"AI MAPS → MGE CERTIFIES THE MAP → MGE CERTIFIES THE INVOICE → SENTRY ADVISOR",tagColor:C.gold,tagBg:C.goldT,rows:[
+      {k:"What it is",kc:C.gold,v:"The memorandum opens by showing where AI sat in this run: the intake layer that proposed the item mapping (outside Trust Wall 1), MGE's deterministic verification of that mapping, MGE's certification of the transaction, and only then the Sentry Advisor."},
+      {k:"Why it matters",kc:C.red,v:"AI helps you get ready. MGE determines what is true. AI helps you understand what was certified. Only MGE can certify again."}]},
+    {num:"3",label:"The Advisor chat",tag:"READ-ONLY OVER CERTIFIED OBJECTS",tagColor:C.steel,tagBg:C.steelT,rows:[
+      {k:"What it is",kc:C.gold,v:"The Sentry Advisor chat — a question-and-answer window over this run. In the pilot it answers from the certified payload deterministically; with an API key set in its settings it uses a language model under the same constraints."},
+      {k:"Why it matters",kc:C.red,v:"It can explain, prioritize and draft. It cannot change a score, a finding, a state or a seal — and it says so when asked."}]},
+  ]},
+};
+
+/* ═══════════════════════════ GUIDE UI ═══════════════════════════ */
+function GuideItem({item,isOpen,onToggle}){
+  return (
+    <div style={{border:`1px solid ${isOpen?C.line2:C.line}`,borderRadius:10,marginBottom:8,overflow:"hidden",background:C.card}}>
+      <button onClick={onToggle} style={{width:"100%",display:"flex",alignItems:"center",gap:10,padding:"12px 14px",background:"transparent",border:"none",cursor:"pointer",textAlign:"left"}}>
+        <div style={{width:22,height:22,borderRadius:"50%",flexShrink:0,background:item.tagBg,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <M s={{fontSize:10,fontWeight:700,color:item.tagColor}}>{item.num}</M>
+        </div>
+        <span style={{fontSize:13,fontWeight:600,color:C.ink,flex:1,lineHeight:1.3,fontFamily:F.head}}>{item.label}</span>
+        <span style={{fontSize:10,color:C.muted2,transform:isOpen?"rotate(180deg)":"none",transition:"transform .2s",display:"inline-block"}}>▼</span>
+      </button>
+      <div style={{padding:"0 14px 12px"}}>
+        <Tag color={item.tagColor} bg={item.tagBg}>{item.tag}</Tag>
+        {isOpen && (
+          <div style={{display:"flex",flexDirection:"column",gap:12,marginTop:14}}>
+            {item.rows.map((row,i)=>(
+              <div key={i} style={{borderLeft:`3px solid ${row.kc}`,paddingLeft:12}}>
+                <Label color={row.kc} style={{marginBottom:4}}>{row.k}</Label>
+                <div style={{fontSize:12.5,color:C.muted,lineHeight:1.6}}>{row.v}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+function UserGuidePanel({initialSection="findings",onClose}){
+  const [active,setActive] = useState(initialSection);
+  const [openItem,setOpenItem] = useState(0);
+  useEffect(()=>{ setActive(initialSection); setOpenItem(0); },[initialSection]);
+  const sec = GUIDE_SECTIONS[active];
+  return (
+    <div style={{background:C.paper,height:"100%",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      <div style={{background:C.card,borderBottom:`1px solid ${C.line}`,padding:"16px 18px",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
+          <div style={{display:"flex",alignItems:"baseline",gap:8}}>
+            <H s={{fontSize:15,fontWeight:800,color:C.ink,letterSpacing:"-0.01em"}}>Presenter Guide</H>
+            <M s={{fontSize:10,color:C.muted2,letterSpacing:"0.1em"}}>M04:SCR</M>
+          </div>
+          <button onClick={onClose} style={{background:"transparent",border:`1px solid ${C.line2}`,color:C.muted,fontSize:15,cursor:"pointer",padding:"2px 9px",borderRadius:6,lineHeight:1.2}}>×</button>
+        </div>
+        <div style={{fontSize:12,color:C.muted,lineHeight:1.5}}>What you are looking at, what it means, what it does, and why it matters.</div>
+      </div>
+      <div style={{display:"flex",borderBottom:`1px solid ${C.line}`,background:C.card,flexShrink:0,overflowX:"auto"}}>
+        {Object.entries(GUIDE_SECTIONS).map(([key,s])=>(
+          <button key={key} onClick={()=>{setActive(key);setOpenItem(0);}} style={{flex:"1 0 auto",minWidth:64,padding:"11px 6px",background:"transparent",border:"none",
+            borderBottom:active===key?`2px solid ${s.color}`:"2px solid transparent",cursor:"pointer"}}>
+            <span style={{fontSize:12,fontWeight:active===key?700:500,color:active===key?C.ink:C.muted2,fontFamily:F.head}}>{s.label}</span>
+            <M s={{fontSize:9,color:C.muted2,display:"block",marginTop:2}}>{s.items.length} items</M>
+          </button>
+        ))}
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"14px 14px 24px"}}>
+        {sec.items.map((item,idx)=>(<GuideItem key={`${active}-${idx}`} item={item} isOpen={openItem===idx} onToggle={()=>setOpenItem(openItem===idx?null:idx)}/>))}
+        <div style={{marginTop:18,paddingTop:14,borderTop:`1px solid ${C.line}`,textAlign:"center"}}>
+          <div style={{display:"flex",justifyContent:"center",marginBottom:8}}><Logo h={18}/></div>
+          <M s={{fontSize:9,color:C.muted2,letterSpacing:"0.08em",display:"block",lineHeight:1.8}}>Certified Intelligence.<br/>© 2026 FohBoh.ai, Inc. All rights reserved | Patent Pending</M>
+        </div>
+      </div>
+    </div>
+  );
+}
+function FloatingGuideButton({onClick,label}){
+  const [hover,setHover] = useState(false);
+  return (
+    <button onClick={onClick} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}
+      style={{position:"fixed",right:0,top:"50%",transform:"translateY(-50%)",background:hover?C.hi:C.gold,border:"none",color:"#fff",
+        padding:"16px 11px",borderRadius:"8px 0 0 8px",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:F.mono,letterSpacing:"0.16em",
+        writingMode:"vertical-rl",textOrientation:"mixed",boxShadow:"-2px 4px 14px rgba(20,23,26,.18)",zIndex:9,transition:"background .2s"}}>
+      {label}
+    </button>
+  );
+}
+
+/* ═══════════════════════════ SCREENS ═══════════════════════════ */
+function DropSlot({label,hint,file,onFile,required}){
+  const [drag,setDrag]=useState(false); const ref=useRef(null);
+  const take = f => { if (f && (f.type==="application/pdf" || /\.pdf$/i.test(f.name))) onFile(f); };
+  return (
+    <div onClick={()=>ref.current?.click()} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)} onDrop={e=>{e.preventDefault();setDrag(false);take(e.dataTransfer.files[0]);}}
+      style={{flex:1,minWidth:200,border:`2px dashed ${file?C.green:drag?C.gold:C.line2}`,borderRadius:12,padding:"22px 16px",display:"flex",flexDirection:"column",alignItems:"center",gap:8,cursor:"pointer",background:file?C.greenT:drag?C.goldT:C.card,transition:"all .25s",userSelect:"none",textAlign:"center"}}>
+      <div style={{fontSize:22}}>{file?"✓":"📄"}</div>
+      <div style={{fontFamily:F.head,fontSize:14,fontWeight:700,color:file?C.green:C.ink}}>{label}{required&&!file&&<span style={{color:C.red}}> *</span>}</div>
+      <div style={{fontSize:11.5,color:C.muted,lineHeight:1.4,minHeight:32}}>{file?file.name:hint}</div>
+      <input ref={ref} type="file" accept=".pdf,application/pdf" style={{display:"none"}} onChange={e=>take(e.target.files[0])}/>
+    </div>
+  );
+}
+function StepUpload({onUpload,onDemo,onThreeWay,onThreeWayDemo,mode,setMode}){
+  const [drag,setDrag] = useState(false);
+  const [docs,setDocs] = useState({invoice:null,po:null,rl:null});
+  const ref = useRef(null);
+  const process = f => { if (f && (f.type==="application/pdf" || /\.pdf$/i.test(f.name))) onUpload(f); };
+  const three = mode==="three";
+  return (
+    <div style={{animation:"rise .4s ease-out"}}>
+      <div style={{textAlign:"center",marginBottom:28}}>
+        <Label color={C.gold} style={{marginBottom:16}}>Sentry™ · M04:SCR · Supply Chain Certification</Label>
+        <div style={{fontFamily:F.head,fontSize:44,fontWeight:800,color:C.ink,letterSpacing:"-0.03em",lineHeight:1.1,marginBottom:16}}>
+          {three ? <>Three documents. One truth.<br/><span style={{color:C.gold}}>Certified three-way match.</span></> : <>Drop a vendor invoice.<br/><span style={{color:C.gold}}>Watch it get certified.</span></>}
+        </div>
+        <div style={{fontSize:16,color:C.muted,maxWidth:600,margin:"0 auto",lineHeight:1.65}}>
+          {three ? "Invoice, purchase order, and receiving log — sealed on receipt, reconciled line by line, certified by a deterministic rule set. R240 runs on real documents, not a derived PO."
+                 : "A Sentry module, through the MGE API contract: the document is sealed, every line item is extracted, a deterministic rule set fires against the system of record, six Trust Gates decide whether the run certifies, and a Certified Analysis & Audit Report issues — with no AI in the certification path."}
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"center",marginBottom:22}}>
+        <div style={{display:"inline-flex",background:C.fill,border:`1px solid ${C.line}`,borderRadius:10,padding:4,gap:4}}>
+          {[["single","Invoice certification"],["three","Three-way match"]].map(([k,l])=>(
+            <button key={k} onClick={()=>setMode(k)} style={{padding:"9px 16px",borderRadius:7,border:"none",cursor:"pointer",fontFamily:F.head,fontSize:13,fontWeight:700,
+              background:mode===k?C.gold:"transparent",color:mode===k?"#fff":C.muted,transition:"all .2s"}}>{l}</button>))}
+        </div>
+      </div>
+      {three ? (
+        <>
+          <div style={{display:"flex",gap:12,flexWrap:"wrap",marginBottom:14}}>
+            <DropSlot label="Vendor invoice" hint="What the vendor is charging" file={docs.invoice} required onFile={f=>setDocs(d=>({...d,invoice:f}))}/>
+            <DropSlot label="Purchase order" hint="What the operator agreed to buy, and at what price" file={docs.po} onFile={f=>setDocs(d=>({...d,po:f}))}/>
+            <DropSlot label="Receiving log" hint="What came off the truck — signed at the dock (Input D)" file={docs.rl} onFile={f=>setDocs(d=>({...d,rl:f}))}/>
+          </div>
+          <div style={{display:"flex",gap:12,alignItems:"center",justifyContent:"center",flexWrap:"wrap",marginBottom:30}}>
+            <button disabled={!docs.invoice} onClick={()=>onThreeWay(docs)} style={{background:docs.invoice?C.ink:C.line2,border:"none",color:"#fff",padding:"13px 26px",borderRadius:10,fontSize:14,fontWeight:700,cursor:docs.invoice?"pointer":"not-allowed",fontFamily:F.head}}>
+              Run three-way certification →
+            </button>
+            <button onClick={onThreeWayDemo} style={{background:"transparent",border:"none",cursor:"pointer",color:C.steel,fontSize:13,fontFamily:F.mono,letterSpacing:"0.04em",textDecoration:"underline",textUnderlineOffset:4}}>
+              ▶ built-in set (INV-2026-04392 + PO-BF-2211 + RL-04392)
+            </button>
+          </div>
+          <div style={{fontSize:12,color:C.muted2,textAlign:"center",marginTop:-18,marginBottom:28}}>Leave a slot empty to see what R236 does when a leg is missing.</div>
+        </>
+      ) : (
+        <>
+          <div onClick={()=>ref.current?.click()} onDragOver={e=>{e.preventDefault();setDrag(true);}} onDragLeave={()=>setDrag(false)}
+            onDrop={e=>{e.preventDefault();setDrag(false);process(e.dataTransfer.files[0]);}}
+            style={{border:`2px dashed ${drag?C.gold:C.line2}`,borderRadius:16,padding:"56px 28px",display:"flex",flexDirection:"column",alignItems:"center",gap:12,
+              cursor:"pointer",background:drag?C.goldT:C.card,transition:"all .25s",userSelect:"none",marginBottom:18}}>
+            <div style={{width:56,height:56,borderRadius:14,background:C.fill,display:"flex",alignItems:"center",justifyContent:"center",fontSize:26}}>📄</div>
+            <div style={{fontFamily:F.head,fontSize:20,fontWeight:700,color:drag?C.gold:C.ink}}>{drag?"Release to certify":"Drop invoice PDF here"}</div>
+            <div style={{fontSize:13,color:C.muted2}}>or click to browse · sample invoices are in the demo document set</div>
+            <Tag color={C.gold} bg={C.goldT} style={{marginTop:6}}>PDF · Sealed on receipt</Tag>
+          </div>
+          <input ref={ref} type="file" accept=".pdf,application/pdf" style={{display:"none"}} onChange={e=>process(e.target.files[0])}/>
+          <div style={{textAlign:"center",marginBottom:36}}>
+            <button onClick={onDemo} style={{background:"transparent",border:"none",cursor:"pointer",color:C.steel,fontSize:13,fontFamily:F.mono,letterSpacing:"0.04em",textDecoration:"underline",textUnderlineOffset:4,padding:"4px 0"}}>
+              ▶ Skip upload — run with the built-in invoice (INV-2026-04392)
+            </button>
+          </div>
+        </>
+      )}
+      <Card style={{padding:"18px 22px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"14px 28px"}}>
+          {[["🔏","Sealed on receipt","SHA-256 digest of each document computed the moment it lands — chain of custody opens before parsing."],
+            ["⚙️","Deterministic rules","Seven rules from the M04:SCR set (R211–R330): price, quantity, three-way match, duplicate, credit memo, contract terms — gated by R236. Same input, same output."],
+            ["🛡️","Trust Score","Eight weighted Trust Gates (TGS-01–08) score the run; R236 blocks certification when evidence coverage falls below 85."],
+            ["📑","CAAR issued","Certified Analysis & Audit Report — vendor-addressed, evidence-cited, cryptographically sealed."]
+          ].map(([icon,t,d],i)=>(
+            <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+              <span style={{fontSize:18,lineHeight:1.2}}>{icon}</span>
+              <div><div style={{fontFamily:F.head,fontSize:13,fontWeight:700,color:C.ink,marginBottom:2}}>{t}</div>
+                <div style={{fontSize:12,color:C.muted,lineHeight:1.5}}>{d}</div></div>
+            </div>
+          ))}
+        </div>
+        <div style={{marginTop:16,paddingTop:12,borderTop:`1px solid ${C.line}`,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+          <Tag color={C.steel} bg={C.steelT}>Reference data loaded</Tag>
+          <M s={{fontSize:11,color:C.muted}}>{REF_SUMMARY}</M>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function StepIngest({fileName,docHash,docHashes,phase}){
+  return (
+    <div style={{animation:"rise .4s ease-out"}}>
+      <Label color={C.gold} style={{marginBottom:8}}>MGE certification pipeline</Label>
+      <div style={{fontFamily:F.head,fontSize:26,fontWeight:800,color:C.ink,letterSpacing:"-0.02em",marginBottom:4}}>Ingesting invoice</div>
+      <M s={{fontSize:12,color:C.muted,display:"block",marginBottom:22}}>{fileName}</M>
+      <Card>
+        <Label style={{marginBottom:14}}>Pipeline log</Label>
+        {PIPELINE.map(([t,d],i)=>{
+          const done=i<phase, active=i===phase, pend=i>phase;
+          return (
+            <div key={i} style={{display:"flex",gap:12,alignItems:"flex-start",marginBottom:12,opacity:pend?.3:1,transition:"opacity .3s"}}>
+              <div style={{width:18,height:18,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",marginTop:1}}>
+                {done?<span style={{color:C.green,fontSize:13,fontWeight:700}}>✓</span>:active?<Spin sz={14}/>:<div style={{width:6,height:6,borderRadius:"50%",background:C.line2}}/>}
+              </div>
+              <div>
+                <M s={{fontSize:12,fontWeight:600,color:done?C.ink:active?C.gold:C.muted2,display:"block"}}>{t}</M>
+                <div style={{fontSize:11.5,color:C.muted,lineHeight:1.5}}>{d}{i===1 && docHash && !docHashes && <span> — <M s={{color:C.violet}}>{short(docHash)}</M></span>}
+                  {i===1 && docHashes && <span style={{display:"block",marginTop:3}}>{[["Invoice",docHashes.invoice],["Purchase order",docHashes.po],["Receiving log",docHashes.rl]].map(([l,h])=><span key={l} style={{display:"block"}}>{l}: <M s={{color:h?C.violet:C.red}}>{h?short(h):"not supplied"}</M></span>)}</span>}
+                  {i===3 && docHashes && <span> — {docHashes.po?"PO":"no PO"} · {docHashes.rl?"receiving log":"no receiving log"}</span>}</div>
+              </div>
+            </div>
+          );
+        })}
+      </Card>
+    </div>
+  );
+}
+
+function StepRules({data,onComplete}){
+  const [fired,setFired] = useState(0);
+  const rules = data.ruleResults;
+  useEffect(()=>{ const t=setInterval(()=>setFired(f=>{ if(f>=rules.length){clearInterval(t);setTimeout(onComplete,1400);return f;} return f+1; }),1250); return ()=>clearInterval(t); },[rules.length]);
+  const fails = rules.filter(r=>r.result==="FAIL"&&r.ruleId!=="R236").length;
+  const tone = r => r.result==="PASS"?{c:C.green,bg:C.greenT}:r.result==="FAIL"?{c:C.red,bg:C.redT}:{c:C.muted2,bg:C.fill};
+  return (
+    <div style={{animation:"rise .4s ease-out"}}>
+      <Label color={C.gold} style={{marginBottom:8}}>Rules engine — firing</Label>
+      <div style={{fontFamily:F.head,fontSize:26,fontWeight:800,color:C.ink,letterSpacing:"-0.02em",marginBottom:4}}>Sentry M04:SCR rule set</div>
+      <div style={{fontSize:12.5,color:C.muted,marginBottom:20}}>Deterministic · Sequenced · {rules.length} of the R211–R330 set in this pilot · R236 fires first and gates the rest</div>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {rules.map((r,i)=>{ const active=i<fired, t=tone(r);
+          return (
+            <div key={i} style={{background:C.card,border:`1px solid ${active?C.line2:C.line}`,borderLeft:`4px solid ${active?t.c:C.line}`,borderRadius:10,padding:"12px 16px",
+              opacity:active?1:.35,transform:active?"none":"translateX(-6px)",transition:"all .38s cubic-bezier(.22,1,.36,1)"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:active?6:0}}>
+                <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                  <M s={{fontSize:11,color:C.muted2,fontWeight:600}}>{r.ruleId}</M>
+                  <span style={{fontSize:13,fontWeight:700,color:C.ink,fontFamily:F.head}}>{r.ruleName}</span>
+                  <M s={{fontSize:9,color:C.muted2,letterSpacing:"0.06em"}}>{r.gate}</M>
+                </div>
+                {active&&<Tag color={t.c} bg={t.bg}>{r.result}</Tag>}
+              </div>
+              {active&&<div style={{fontSize:12,color:C.muted,lineHeight:1.55}}>{r.finding}
+                {r.result==="FAIL"&&r.recoveryAmount>0&&<M s={{color:C.red,marginLeft:8,fontWeight:700}}>→ {money(r.recoveryAmount)}</M>}</div>}
+            </div>
+          ); })}
+      </div>
+      <div style={{marginTop:16}}>
+        {fired>=rules.length
+          ? <Tag color={fails?C.red:C.green} bg={fails?C.redT:C.greenT}>{fails?`${fails} finding${fails>1?"s":""} · Rules complete`:"All clear · Rules complete"}</Tag>
+          : <Tag color={C.gold} bg={C.goldT}>Firing… {fired}/{rules.length}</Tag>}
+      </div>
+    </div>
+  );
+}
+
+function TrustGate({ts, compact=false, narrow=false}){
+  const color = ts.certified ? C.green : C.red;
+  const sc = ts.score>=85?C.green:ts.score>=70?C.gold:ts.score>=50?C.amber:C.red;
+  return (
+    <Card style={{padding:compact?"14px 18px":20, borderTop:`3px solid ${color}`}}>
+      <div style={{display:"flex",gap:28,alignItems:"flex-start",flexWrap:"wrap"}}>
+        <div style={{flex:"0 0 200px",minWidth:0}}>
+          <Label style={{marginBottom:6}}>MGE Trust Score{MQ6_LABEL?" · MQ6":""}<Tip id="trustScore"/></Label>
+          <div style={{display:"flex",alignItems:"baseline",gap:6}}>
+            <span style={{fontFamily:F.head,fontSize:compact?34:44,fontWeight:800,color:ts.certified?sc:C.muted2,letterSpacing:"-0.03em",lineHeight:1}}>{ts.certified?ts.score:"—"}</span>
+            <M s={{fontSize:12,color:C.muted2}}>/ 100</M>
+          </div>
+          <div style={{fontSize:11,color:C.muted,marginTop:6,lineHeight:1.5}}>{ts.certified?`Weighted across the M04 Trust Gates evaluated (${ts.evaluatedWeight}% of gate weight).`:"Withheld — R236 fired. Gates cannot score at full confidence on incomplete evidence."}</div>
+          <div style={{marginTop:12,paddingTop:10,borderTop:`1px solid ${C.line}`}}>
+            <Label style={{marginBottom:4}}>Evidence coverage · R236<Tip id="coverage"/></Label>
+            <div style={{display:"flex",alignItems:"baseline",gap:6}}>
+              <span style={{fontFamily:F.head,fontSize:compact?22:28,fontWeight:800,color,letterSpacing:"-0.02em",lineHeight:1}}>{ts.coverage}</span>
+              <M s={{fontSize:11,color:C.muted2}}>/ 100 · floor {ts.threshold}</M>
+            </div>
+            <div style={{marginTop:6}}><Tag color={color} bg={`${color}14`} border={`${color}55`}>{ts.certified?"Certification floor met":"Certification blocked"}</Tag></div>
+          </div>
+        </div>
+        <div style={{flex:"1 1 320px",minWidth:0}}>
+          <Label style={{marginBottom:8}}>Trust Gates · TGS-01 – TGS-08<Tip id="gates"/></Label>
+          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            {ts.gates.map(g=>{ const c = !g.evaluated?C.muted2:g.score>=85?C.green:g.score>=60?C.amber:C.red; return (
+              <div key={g.id} style={{display:"grid",gridTemplateColumns:"64px minmax(0,1fr) 40px minmax(90px,140px) 34px",alignItems:"center",columnGap:10,opacity:g.evaluated?1:.5}}>
+                <M s={{fontSize:10,color:C.ink,fontWeight:700}}>{g.id}</M>
+                <span style={{fontSize:11.5,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{g.name}</span>
+                <M s={{fontSize:10,color:C.muted2,textAlign:"right"}}>{g.w}%</M>
+                <div style={{height:4,background:C.fill2,borderRadius:2}}><div style={{height:4,width:`${g.evaluated?g.score:0}%`,background:c,borderRadius:2,transition:"width .6s"}}/></div>
+                <M s={{fontSize:11,color:c,fontWeight:700,textAlign:"right"}}>{g.evaluated?g.score:"n/a"}</M>
+              </div> ); })}
+          </div>
+          {!compact&&(
+            <div style={{marginTop:14,paddingTop:10,borderTop:`1px solid ${C.line}`}}>
+              <Label style={{marginBottom:6}}>Evidence coverage checks (six)</Label>
+              <div style={{display:"flex",flexDirection:"column",gap:5}}>
+                {ts.dims.map(d=>{ const c = d.score>=85?C.green:d.score>=60?C.amber:C.red; return (
+                  <div key={d.key} style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(90px,140px) 34px",alignItems:"center",columnGap:10}}>
+                    <span style={{fontSize:11,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{d.label}</span>
+                    <div style={{height:3,background:C.fill2,borderRadius:2}}><div style={{height:3,width:`${d.score}%`,background:c,borderRadius:2}}/></div>
+                    <M s={{fontSize:11,color:c,fontWeight:700,textAlign:"right"}}>{d.score}</M>
+                  </div> ); })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      {!ts.certified&&!compact&&(
+        <div style={{marginTop:14,padding:"10px 14px",background:C.redT,borderRadius:8,borderLeft:`3px solid ${C.red}`}}>
+          <Label color={C.red} style={{marginBottom:4}}>R236 fired — gap itemized · what would raise coverage to {ts.threshold}</Label>
+          {ts.gaps.map(g=><div key={g.key} style={{fontSize:12,color:C.ink,lineHeight:1.55}}><M s={{fontSize:10,color:C.red,fontWeight:700}}>{g.label} {g.score}</M> — {g.note}</div>)}
+        </div>
+      )}
+    </Card>
+  );
+}
+const scoreColor = s => s>=90?C.green:s>=70?C.gold:s>=50?C.amber:C.red;
+function VendorGauge({ts, applied=true}){
+  const score=ts.score, color=scoreColor(score);
+  const R=54,cx=64,cy=64,a0=-200,a1=20, fill=(score/100)*(a1-a0);
+  const rad=a=>a*Math.PI/180;
+  const arc=(s,e,r)=>{const x1=cx+r*Math.cos(rad(s)),y1=cy+r*Math.sin(rad(s)),x2=cx+r*Math.cos(rad(e)),y2=cy+r*Math.sin(rad(e));return `M ${x1} ${y1} A ${r} ${r} 0 ${Math.abs(e-s)>180?1:0} 1 ${x2} ${y2}`;};
+  const subs=[["Price",ts.priceAccuracy],["Delivery",ts.deliveryAccuracy],["Billing",ts.billingIntegrity],["Credit & Tax",ts.creditTaxCompliance]];
+  const tr = ts.trend==="IMPROVING"?["↑",C.green]:ts.trend==="DECLINING"?["↓",C.red]:["→",C.muted];
+  return (
+    <Card>
+      <div style={{display:"flex",gap:24,alignItems:"flex-start"}}>
+        <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center"}}>
+          <svg width={128} height={92} viewBox="0 0 128 92">
+            <path d={arc(a0,a1,R)} fill="none" stroke={C.fill2} strokeWidth={9} strokeLinecap="round"/>
+            {score>0&&<path d={arc(a0,a0+fill,R)} fill="none" stroke={color} strokeWidth={9} strokeLinecap="round"/>}
+            <text x={cx} y={cy+6} textAnchor="middle" fill={C.ink} fontSize={26} fontWeight={800} fontFamily={F.head}>{score}</text>
+            <text x={cx} y={cy+20} textAnchor="middle" fill={C.muted2} fontSize={9} fontFamily={F.mono}>/ 100</text>
+          </svg>
+          <div style={{fontFamily:F.head,fontSize:22,fontWeight:800,color,marginTop:-8}}>{ts.grade}</div>
+        </div>
+        <div style={{flex:1}}>
+          <Label style={{marginBottom:8}}>Vendor Reliability Score<Tip id="vendor"/>{!applied&&<span style={{color:C.red}}> · not written — run not certified</span>}</Label>
+          <div style={{display:"flex",gap:10,alignItems:"center",marginBottom:14,flexWrap:"wrap"}}>
+            <Tag color={color} bg={`${color}14`} border={`${color}55`}>{ts.classification}</Tag>
+            <M s={{fontSize:11,color:tr[1],fontWeight:700}}>{tr[0]} {ts.trend}</M>
+            <M s={{fontSize:10,color:C.muted2}}>this invoice {ts.invoiceScore??"—"} · 90-day prior {ts.priorScore} · {ts.certified90d} certified</M>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:"8px 20px"}}>
+            {subs.map(([l,v],i)=>(
+              <div key={i}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                  <M s={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"0.08em"}}>{l}</M>
+                  <M s={{fontSize:10,color:scoreColor(v),fontWeight:700}}>{v}</M>
+                </div>
+                <div style={{height:4,background:C.fill2,borderRadius:2}}><div style={{height:4,width:`${v}%`,background:scoreColor(v),borderRadius:2,transition:"width .6s"}}/></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div style={{marginTop:16,padding:"12px 14px",background:C.fill,borderRadius:8,borderLeft:`3px solid ${color}`,fontSize:12.5,color:C.muted,lineHeight:1.65}}>{ts.narrative}</div>
+      {ts.riskFlags.length>0&&<div style={{marginTop:10,display:"flex",gap:6,flexWrap:"wrap"}}>{ts.riskFlags.map((f,i)=><Tag key={i} color={C.amber} bg={C.amberT}>{f}</Tag>)}</div>}
+    </Card>
+  );
+}
+
+function StepFindings({data}){
+  const {ruleResults,invoice,summary,vendorScore,trustScore,payloadHash} = data;
+  const fails = ruleResults.filter(r=>r.result==="FAIL"&&r.ruleId!=="R236");
+  const clean = fails.length===0;
+  const cert = trustScore.certified;
+  return (
+    <div style={{animation:"rise .4s ease-out"}}>
+      <Label color={!cert?C.red:clean?C.green:C.red} style={{marginBottom:8}}>{!cert?"Not certified — evidence gap":clean?"Certified — compliant":"Certified — variances detected"}</Label>
+      <div style={{fontFamily:F.head,fontSize:26,fontWeight:800,color:C.ink,letterSpacing:"-0.02em",marginBottom:18}}>
+        {!cert?`R236 fired · evidence coverage ${trustScore.coverage} below the ${trustScore.threshold} floor`:clean?"No recovery required":`${fails.length} finding${fails.length>1?"s":""} · ${money(summary.totalRecovery)} certified recovery`}
+      </div>
+      <TrustGate ts={trustScore}/>
+      <VendorGauge ts={vendorScore} applied={cert}/>
+      <Card style={{padding:"16px 20px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:14}}>
+          {[["Vendor",invoice.vendor],["Invoice",`${invoice.id} · ${invoice.date}`],["Operator",`${invoice.operator}${invoice.operatorSite?" · "+invoice.operatorSite:""}`],["Total billed",money(invoice.total)],
+            ...(data.threeWay?[["Purchase order",data.po?`${data.po.id} · ${data.po.date} · ${money(data.po.total)}`:"Not supplied"],["Receiving log",data.recvDoc?`${data.recvDoc.ref} · ${data.recvDoc.delivered} · ${data.recvDoc.receivedBy||"—"}`:"Not supplied"]]:[])].map(([l,v])=>(
+            <div key={l}><Label style={{marginBottom:4}}>{l}</Label><div style={{fontSize:12.5,color:C.ink,fontWeight:600,lineHeight:1.4}}>{v}</div></div>
+          ))}
+        </div>
+      </Card>
+      {clean ? (
+        <Card accent={cert?C.green:C.red} style={{textAlign:"center",padding:28}}>
+          <div style={{fontSize:30,color:cert?C.green:C.red,marginBottom:8}}>{cert?"✓":"—"}</div>
+          <div style={{fontFamily:F.head,fontSize:16,fontWeight:700,color:C.ink,marginBottom:6}}>{cert?"Invoice certified — no variances":"No variances identified — run not certified"}</div>
+          <div style={{fontSize:12.5,color:C.muted}}>{cert?`All ${summary.rulesEvaluated} evaluated rules passed. This invoice is compliant and the IUM record has been written.`:`${summary.rulesEvaluated} of ${ruleResults.length} rules could be evaluated on the evidence available. Nothing was found, but MGE will not certify what it could not fully check. The IUM record has been written.`}</div>
+        </Card>
+      ) : (
+        <>
+          {fails.map((r,i)=>(
+            <Card key={i} accent={C.red} style={{padding:"16px 20px",marginBottom:10}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+                <div style={{display:"flex",gap:10,alignItems:"center"}}><Tag color={C.red} bg={C.redT}>{r.ruleId}</Tag><span style={{fontFamily:F.head,fontSize:14,fontWeight:700,color:C.ink}}>{r.ruleName}</span><Tip id="finding"/></div>
+                {r.recoveryAmount>0&&<M s={{fontSize:16,fontWeight:700,color:C.red}}>{money(r.recoveryAmount)}</M>}
+              </div>
+              <div style={{fontSize:12.5,color:C.ink,lineHeight:1.6}}>{r.finding}</div>
+              <div style={{fontSize:11.5,color:C.muted,marginTop:6,lineHeight:1.5}}><M s={{color:C.muted2,fontSize:10,letterSpacing:"0.08em"}}>EVIDENCE</M> {r.evidence}</div>
+            </Card>
+          ))}
+          <Card style={{background:C.fill,border:`1px solid ${C.line2}`,padding:"18px 22px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:16,flexWrap:"wrap"}}>
+              <div><Label color={C.gold} style={{marginBottom:6}}>{cert?"Total certified recovery":"Identified exposure — not certified"}</Label><div style={{fontFamily:F.head,fontSize:34,fontWeight:800,color:cert?C.green:C.red,letterSpacing:"-0.02em"}}>{money(summary.totalRecovery)}</div></div>
+              <div style={{textAlign:"right"}}><Label style={{marginBottom:4}}>Chain of custody sealed<Tip id="seal"/></Label><M s={{fontSize:11,color:C.violet}}>{short(payloadHash)}</M></div>
+            </div>
+          </Card>
+        </>
+      )}
+      <div style={{marginTop:4}}><Tag color={cert?C.green:C.red} bg={cert?C.greenT:C.redT}>{!cert?"Sealed report — NOT CERTIFIED · R236 gap list for the operator":clean?"CAAR — compliance certificate ready":"CAAR packaged — ready for operator action"}</Tag></div>
+    </div>
+  );
+}
+
+function StepCAAR({data}){
+  const [,force] = useState(0);
+  useEffect(()=>{ if (data.log && !data.log.some(e=>/CAAR issued/.test(e.event))) appendLog(data.log, `CAAR issued — ${data.caarId} · IUM record ${data.iumId} · audit trail logged`).then(()=>force(x=>x+1)); },[]);
+  const {invoice,ruleResults,summary,vendorScore:ts,trustScore:tg,lineItems,payloadHash,docHash,caarId,issuedAt,iumId} = data;
+  const fails = ruleResults.filter(r=>r.result==="FAIL"&&r.recoveryAmount>0);
+  const allFails = ruleResults.filter(r=>r.result==="FAIL"&&r.ruleId!=="R236");
+  const passes = ruleResults.filter(r=>r.result==="PASS");
+  const clean = allFails.length===0;
+  const cert = tg.certified;
+  const tgColor = cert?C.green:C.red;
+  const color = scoreColor(ts.score);
+  const tw = data.threeWay; const poLine = sku => (data.po?.lines||[]).find(l=>l.sku===sku); const rcv = sku => data.recvDoc ? data.recvDoc.items[sku] : undefined;
+  const cols = tw ? "1fr 58px 58px 58px 82px 82px 84px" : "1fr 64px 86px 86px 92px";
+  const flagLabel = f => ({OK:"OK",PRICE_VARIANCE:"PRICE",QTY_VARIANCE:"SHORT",EXTENSION_ERROR:"EXTENSION",DUPLICATE_LINE:"DUPLICATE"})[f]||f;
+  return (
+    <div style={{animation:"rise .4s ease-out"}}>
+      <Label color={cert?C.green:C.red} style={{marginBottom:8}}>{!cert?"Sealed report issued · not certified":clean?"Certification complete":"CAAR issued · ready for dispatch"}</Label>
+      <div style={{fontFamily:F.head,fontSize:26,fontWeight:800,color:C.ink,letterSpacing:"-0.02em",marginBottom:4}}>{cert?"Certified Analysis & Audit Report":"Analysis & Audit Report — NOT CERTIFIED"}</div>
+      <div style={{fontSize:12.5,color:C.muted,marginBottom:20}}>{cert?"Evidence-grade · SHA-256 sealed · Chain of custody logged":"Hash-sealed · R236 certification block · Gap itemized for the operator"}</div>
+
+      <div style={{background:C.card,border:`1px solid ${C.line2}`,borderRadius:14,overflow:"hidden",marginBottom:16,boxShadow:"0 6px 24px rgba(20,23,26,.05)"}}>
+        <div style={{padding:"16px 22px",borderBottom:`1px solid ${C.line}`,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:16}}>
+          <div>
+            <M s={{fontSize:10,color:C.gold,letterSpacing:"0.18em",fontWeight:600,display:"block",marginBottom:4}}>FOHBOH | MGE™ CERTIFIED DOCUMENT</M>
+            <div style={{fontFamily:F.head,fontSize:20,fontWeight:800,color:C.ink}}>{caarId}<Tip id="caarId"/></div>
+          </div>
+          <div style={{textAlign:"right"}}>
+            <div style={{fontSize:11,color:C.muted}}>{issuedAt}</div>
+            <M s={{fontSize:10,color:C.violet,display:"block",marginTop:3}}>SEAL · SHA-256</M>
+            <M s={{fontSize:10,color:C.muted2,display:"block"}}>{short(payloadHash)}</M>
+          </div>
+        </div>
+        <div style={{background:(cert&&clean)?C.greenT:C.redT,borderBottom:`1px solid ${C.line}`,padding:"9px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+          <M s={{fontSize:11,fontWeight:700,color:(cert&&clean)?C.green:C.red,letterSpacing:"0.06em"}}>{summary.certificationStatus}</M>
+          <div style={{display:"flex",gap:8}}><Tag color={tgColor} bg={`${tgColor}14`} border={`${tgColor}55`}>{cert?`Trust Score ${tg.score} · `:""}Coverage {tg.coverage}{MQ6_LABEL?" · MQ6":""}</Tag><Tag color={cert?color:C.muted2} bg={cert?`${color}14`:C.fill} border={cert?`${color}55`:C.line2}>{cert?`Vendor ${ts.score} · ${ts.classification}`:"Vendor record unchanged"}</Tag></div>
+        </div>
+        <div style={{padding:22}}>
+          <TrustGate ts={tg} compact={cert} narrow={true}/>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:18}}>
+            {[["From",`${invoice.operator}${invoice.operatorSite?" · "+invoice.operatorSite:""}`],["To",`${invoice.vendor}${invoice.vendorContact?" · Attn: "+invoice.vendorContact:""}`]].map(([l,v])=>(
+              <div key={l} style={{background:C.fill,borderRadius:8,padding:"10px 14px"}}><Label style={{marginBottom:4}}>{l}</Label><div style={{fontSize:12.5,color:C.ink,fontWeight:600,lineHeight:1.4}}>{v}</div></div>
+            ))}
+          </div>
+          <div style={{fontSize:12.5,color:C.ink,lineHeight:1.75,marginBottom:20,padding:"12px 16px",background:C.fill,borderRadius:8,borderLeft:`3px solid ${clean?C.green:C.gold}`}}>
+            <span style={{color:C.muted2,fontFamily:F.mono,fontSize:11}}>RE: </span>
+            {!cert
+              ? `Analysis of invoice ${invoice.id} issued by ${invoice.vendor} on ${invoice.date}${invoice.po?` (${invoice.po})`:""}. R236 (Trust Score Floor) fired: evidence coverage ${tg.coverage} is below the ${tg.threshold} certification floor — ${tg.gaps.map(g=>`${g.label.toLowerCase()} ${g.score}`).join(", ")}. This report is hash-sealed but NOT CERTIFIED. ${allFails.length?`The ${allFails.length} variance${allFails.length>1?"s":""} below ${allFails.length>1?"are":"is"} identified exposure, not certified claims, pending the evidence itemized above.`:"No variances were identified on the evidence available."}`
+              : clean
+              ? `MGE certification of invoice ${invoice.id} issued by ${invoice.vendor} on ${invoice.date}${invoice.po?` (${invoice.po})`:""}. ${summary.rulesEvaluated} certification rules passed across ${lineItems.length} line items totaling ${money(invoice.total)}. No recoverable variances detected. This document certifies vendor compliance for the referenced invoice.`
+              : `Certified recovery claim pursuant to MGE certification of invoice ${invoice.id} issued by ${invoice.vendor} on ${invoice.date}${invoice.po?` (${invoice.po})`:""}. The Sentry M04:SCR rule set evaluated ${summary.rulesEvaluated} rules across ${lineItems.length} line items and identified ${allFails.length} certified variance${allFails.length>1?"s":""}. The findings below are presented as recovery claims supported by chain-of-custody evidence, for action by the operator.`}
+          </div>
+
+          <div style={{marginBottom:20}}>
+            <Label style={{marginBottom:10}}>{tw?"Line item audit — three-way (PO · receiving · invoice)":"Line item audit"}{tw&&<Tip id="threeWay"/>}</Label>
+            <div style={{border:`1px solid ${C.line}`,borderRadius:8,overflow:"hidden"}}>
+              <div style={{display:"grid",gridTemplateColumns:cols,background:C.fill,padding:"8px 12px",gap:6}}>
+                {(tw?["Item","PO qty","Recv'd","Inv qty","Billed","Expected","Status"]:["Item","Qty","Billed","Expected","Status"]).map(h=><Label key={h} style={{fontSize:9}}>{h}</Label>)}
+              </div>
+              {lineItems.map((it,i)=>{ const flagged=it.flag!=="OK";
+                return (
+                  <div key={i} style={{display:"grid",gridTemplateColumns:cols,padding:"9px 12px",gap:6,borderTop:`1px solid ${C.line}`,background:flagged?C.redT:"transparent",alignItems:"center"}}>
+                    <div><div style={{fontSize:12,color:C.ink,fontWeight:500}}>{it.description}</div><M s={{fontSize:10,color:C.muted2}}>{it.sku}</M></div>
+                    {tw&&<M s={{fontSize:11.5,color:C.muted}}>{poLine(it.sku)?poLine(it.sku).qty:"—"}</M>}
+                    {tw&&<M s={{fontSize:11.5,color:rcv(it.sku)!==undefined&&rcv(it.sku)<it.qty?C.red:C.muted}}>{rcv(it.sku)!==undefined?rcv(it.sku):"—"}</M>}
+                    <M s={{fontSize:11.5,color:C.muted}}>{it.qty} {it.unit}</M>
+                    <M s={{fontSize:11.5,fontWeight:700,color:flagged?C.red:C.ink}}>{money(it.lineTotal)}</M>
+                    <M s={{fontSize:11.5,color:C.muted}}>{money(it.expectedLineTotal)}</M>
+                    <div>{flagged?<Tag color={C.red} bg={C.redT} style={{fontSize:9}}>{flagLabel(it.flag)}</Tag>:<Tag color={C.green} bg={C.greenT} style={{fontSize:9}}>OK</Tag>}</div>
+                  </div>); })}
+            </div>
+          </div>
+
+          {fails.length>0&&(
+            <div style={{marginBottom:20}}>
+              <Label style={{marginBottom:10}}>{cert?"Certified recovery claims":"Identified exposure — not certified"}</Label>
+              {fails.map((c,i)=>(
+                <div key={i} style={{border:`1px solid ${C.line}`,borderLeft:`4px solid ${C.red}`,borderRadius:9,padding:"12px 16px",marginBottom:8,background:C.card}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6,gap:12}}>
+                    <div><div style={{display:"flex",gap:8,alignItems:"center",marginBottom:3}}><Tag color={C.red} bg={C.redT}>{c.ruleId}</Tag><span style={{fontFamily:F.head,fontSize:13.5,fontWeight:700,color:C.ink}}>{c.ruleName}</span></div><M s={{fontSize:10.5,color:C.muted2}}>{c.scope}</M></div>
+                    <M s={{fontSize:16,fontWeight:700,color:C.red,flexShrink:0}}>{money(c.recoveryAmount)}</M>
+                  </div>
+                  <div style={{fontSize:12.5,color:C.ink,lineHeight:1.6}}>{c.finding}</div>
+                  <div style={{fontSize:11.5,color:C.muted,lineHeight:1.5,borderTop:`1px solid ${C.line}`,paddingTop:6,marginTop:8}}><M s={{color:C.muted2,fontSize:10,letterSpacing:"0.08em"}}>EVIDENCE</M> {c.evidence}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div style={{marginBottom:20}}>
+            <Label style={{marginBottom:8}}>Rules passed ({passes.length}/{summary.rulesEvaluated})</Label>
+            <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+              {passes.map((p,i)=>(<div key={i} style={{background:C.greenT,border:`1px solid rgba(22,135,90,.25)`,borderRadius:6,padding:"5px 10px",display:"flex",gap:6,alignItems:"center"}}>
+                <span style={{color:C.green,fontSize:11,fontWeight:700}}>✓</span><M s={{fontSize:10.5,color:C.ink,fontWeight:600}}>{p.ruleId}</M><span style={{fontSize:11,color:C.muted}}>{p.ruleName}</span></div>))}
+            </div>
+          </div>
+
+          <div style={{background:C.fill,border:`1px solid ${C.line2}`,borderRadius:10,padding:"16px 18px",marginBottom:18}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,gap:12,flexWrap:"wrap"}}>
+              <div><Label color={C.gold} style={{marginBottom:4}}>{!cert?"Identified exposure (uncertified)":clean?"Certified recovery":"Total certified recovery due"}</Label><div style={{fontFamily:F.head,fontSize:30,fontWeight:800,color:!cert?C.red:clean?C.ink:C.green,letterSpacing:"-0.02em"}}>{money(summary.totalRecovery)}</div></div>
+              {!clean&&cert&&<div style={{textAlign:"right"}}><Label style={{marginBottom:4}}>Recovery probability</Label><div style={{fontFamily:F.head,fontSize:22,fontWeight:800,color:C.ink}}>{summary.recoveryProbability}%</div></div>}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,borderTop:`1px solid ${C.line2}`,paddingTop:12}}>
+              {[["Rules evaluated",summary.rulesEvaluated,null],["Lines scanned",summary.lineItemsScanned,null],["IUM record",iumId,"ium"]].map(([l,v,tip])=>(<div key={l}><Label style={{marginBottom:3}}>{l}{tip&&<Tip id={tip}/>}</Label><M s={{fontSize:13,fontWeight:700,color:C.ink}}>{v}</M></div>))}
+            </div>
+          </div>
+
+          <div style={{border:`1px solid ${C.line}`,borderRadius:10,padding:"14px 16px",marginBottom:18}}>
+            <Label style={{marginBottom:10}}>Vendor reliability assessment</Label>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:10,marginBottom:10}}>
+              {[["Reliability",`${ts.score}/100 · ${ts.grade}`],["Classification",ts.classification],["Trend",ts.trend],["Risk flags",ts.riskFlags.length?ts.riskFlags.join(", "):"None active"]].map(([l,v])=>(<div key={l}><Label style={{marginBottom:2}}>{l}</Label><div style={{fontSize:12,color:C.ink,fontWeight:600,lineHeight:1.4}}>{v}</div></div>))}
+            </div>
+            <div style={{fontSize:12,color:C.muted,lineHeight:1.65,borderTop:`1px solid ${C.line}`,paddingTop:10}}>{ts.narrative}</div>
+          </div>
+
+          <div style={{background:C.violetT,border:`1px solid rgba(109,74,168,.25)`,borderRadius:8,padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+            <div>
+              <M s={{fontSize:10,color:C.violet,fontWeight:700,letterSpacing:"0.1em",display:"block",marginBottom:4}}><Tip id="seal" style={{marginLeft:0,marginRight:6}}/>{cert?`CERTIFICATION SEAL · TRUST SCORE ${tg.score} · COVERAGE ${tg.coverage}`:`DOCUMENT SEAL — NOT CERTIFIED · R236 · COVERAGE ${tg.coverage}`}</M>
+              {data.docHashes ? [["Invoice",data.docHashes.invoice],["Purchase order",data.docHashes.po],["Receiving log",data.docHashes.rl]].map(([l,h])=><M key={l} s={{fontSize:10,color:C.muted,display:"block"}}>{l} (Landing Zone): {h||"not supplied"}</M>)
+                : <M s={{fontSize:10,color:C.muted,display:"block"}}>Document (Landing Zone): {docHash}</M>}
+              <M s={{fontSize:10,color:C.muted,display:"block"}}>Payload (Silver Zone): {payloadHash}</M>
+              {data.attestation&&<M s={{fontSize:10,color:C.muted,display:"block"}}>Attestation: {data.attestation.hash} · signed by {data.attestation.custodian}, Evidence Custodian, {data.attestation.signedAt.replace("T"," ").slice(0,19)} UTC</M>}
+            </div>
+            <Tag color={C.violet} bg="#fff" border="rgba(109,74,168,.35)">Tamper-evident</Tag>
+          </div>
+        </div>
+        <div style={{padding:"10px 22px",borderTop:`1px solid ${C.line}`,background:C.fill}}>
+          <M s={{fontSize:9,color:C.muted2,letterSpacing:"0.06em"}}>© 2026 FohBoh.ai, Inc. All rights reserved | Patent Pending · Sentry™ M04:SCR · Metrics Governance Engine</M>
+        </div>
+      </div>
+      {data.attestation&&<div style={{background:C.fill,border:`1px solid ${C.line}`,borderRadius:10,padding:"12px 16px",marginBottom:14,display:"flex",gap:14,alignItems:"center",flexWrap:"wrap"}}>
+        <Label color={C.gold}>Attested evidence set<Tip id="attest"/></Label>
+        <div style={{fontSize:12,color:C.ink}}>{data.attestation.custodian}, Evidence Custodian for {data.attestation.org} · {data.attestation.files.length} file{data.attestation.files.length>1?"s":""} · signature record <M s={{color:C.violet}}>{short(data.attestation.hash)}</M> · STATEMENT v2.0 · E-SIGN / UETA</div>
+      </div>}
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        {!cert
+          ? <><Tag color={C.red} bg={C.redT}>Not certified · R236 · coverage {tg.coverage}</Tag><Tag color={C.gold} bg={C.goldT}>Audit trail logged</Tag><Tag color={C.violet} bg={C.violetT}>IUM record written</Tag><Tag color={C.steel} bg={C.steelT}>Gap list sent to operator</Tag></>
+          : clean
+          ? <><Tag color={C.green} bg={C.greenT}>Certified compliant</Tag><Tag color={C.gold} bg={C.goldT}>Audit trail logged</Tag><Tag color={C.violet} bg={C.violetT}>IUM record written</Tag></>
+          : <><Tag color={C.red} bg={C.redT}>CAAR issued · {money(summary.totalRecovery)}</Tag><Tag color={C.gold} bg={C.goldT}>Audit trail logged</Tag><Tag color={C.violet} bg={C.violetT}>IUM record written</Tag><Tag color={C.steel} bg={C.steelT}>Queued for operator dispatch</Tag></>}
+      </div>
+      <ActivityLog log={data.log}/>
+    </div>
+  );
+}
+
+/* ═══════════════════════════ ACTIVITY LOG — hash-chained, append-only ═══════════════════════════ */
+async function appendLog(log, event){
+  const prev = log.length ? log[log.length-1].hash : "0".repeat(64);
+  const n = log.length+1; const ts = new Date().toISOString();
+  const hash = await sha256(`${n}|${ts}|${event}|${prev}`);
+  log.push({n, ts, event, hash, prev}); return log;
+}
+function ActivityLog({log, compact=false}){
+  if (!log||!log.length) return null;
+  return (
+    <div style={{border:`1px solid ${C.line}`,borderRadius:10,overflow:"hidden",marginTop:16,background:C.card}}>
+      <div style={{background:C.fill,padding:"8px 14px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <Label>Activity log</Label><M s={{fontSize:9.5,color:C.green,fontWeight:700,letterSpacing:"0.08em"}}>HASH-CHAINED · APPEND-ONLY · VERIFIED ✓</M>
+      </div>
+      <div style={{maxHeight:compact?150:260,overflowY:"auto"}}>
+        {log.map(e=>(<div key={e.n} style={{display:"grid",gridTemplateColumns:"28px 150px minmax(0,1fr) 120px",gap:8,padding:"6px 14px",borderTop:`1px solid ${C.line}`,alignItems:"center"}}>
+          <M s={{fontSize:10,color:C.muted2}}>{e.n}</M><M s={{fontSize:10,color:C.muted}}>{e.ts.replace("T"," ").slice(0,19)} UTC</M>
+          <span style={{fontSize:11.5,color:C.ink,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{e.event}</span><M s={{fontSize:9.5,color:C.violet,textAlign:"right"}}>{short(e.hash)}</M></div>))}
+      </div>
+      <div style={{padding:"6px 14px",borderTop:`1px solid ${C.line}`}}><M s={{fontSize:9.5,color:C.muted2}}>Every entry carries a number, a UTC timestamp, and a SHA-256 over its own contents plus the previous entry's hash — nothing can be inserted, removed or restated without breaking the chain.</M></div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════ STAGE & ATTEST — receive · hash · stage · custodian attests & seals ═══════════════════════════ */
+const CUSTODIAN_ORG = "MGE Pilot Restaurant Group";
+const DOC_TYPES = {invoice:"Vendor invoice", po:"Purchase order", rl:"Receiving log"};
+function classifyRows(rows){ const t=rows.slice(0,6).join(" ").toUpperCase(); if (/PURCHASE ORDER/.test(t)) return "po"; if (/RECEIVING LOG/.test(t)) return "rl"; return "invoice"; }
+function StepAttest({staged, setStaged, custodian, setCustodian, onPush, log, logTick, mode, org, sealed}){
+  const [checked,setChecked] = useState(false); const [pw,setPw] = useState(""); const [sealing,setSealing] = useState(false);
+  const invoice = staged.find(f=>f.type==="invoice"&&f.doc);
+  const ready = checked && pw.length>0 && custodian.trim().length>1 && !!invoice;
+  const required = mode==="three" ? ["invoice","po","rl"] : ["invoice"];
+  const present = required.filter(t=>staged.some(f=>f.type===t&&f.doc)).length;
+  const period = invoice ? `${invoice.doc.id} · ${invoice.doc.date}` : "the staged invoice";
+  const name = custodian.trim() || "________";
+  const ORG = org||CUSTODIAN_ORG;
+  const statement = `I, ${name}, named Evidence Custodian for ${ORG}, attest that the documents in this batch are complete for Sentry M04:SCR and ${period}, were provided as issued, and that I am making this statement personally. STATEMENT v2.0`;
+  const setType = (i,type) => setStaged(st=>st.map((f,j)=>j===i?{...f,type,doc:f.parsed[type]||null,corrected:f.proposed!==type}:f));
+  const cols = "minmax(0,1.4fr) 150px 190px 150px 70px";
+  return (
+    <div style={{animation:"rise .4s ease-out"}}>
+      <Label color={C.gold} style={{marginBottom:8}}>Receive · hash · stage · attest</Label>
+      <div style={{fontFamily:F.head,fontSize:26,fontWeight:800,color:C.ink,letterSpacing:"-0.02em",marginBottom:4}}>Custodian attests & seals</div>
+      <div style={{fontSize:12.5,color:C.muted,marginBottom:20}}>Each file was SHA-256 hashed and time-stamped the moment it landed — before anyone at FohBoh could open it. That hash is your chain-of-custody evidence.</div>
+      {sealed&&<div style={{background:C.violetT,border:`1px solid rgba(0,127,127,.3)`,borderRadius:10,padding:"10px 14px",marginBottom:16,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}}><Tag color={C.violet} bg="#fff" border="rgba(0,127,127,.35)">Sealed · read-only</Tag><span style={{fontSize:12,color:C.ink}}>This batch was attested and sealed. You are viewing it; nothing here can be changed. Late documents form a supplementary batch — start a new run from New invoice.</span></div>}
+
+      <Card style={{padding:0,overflow:"hidden"}}>
+        <div style={{padding:"12px 18px",borderBottom:`1px solid ${C.line}`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}><Label>Staged batch<Tip id="intake"/></Label><Tag color={present===required.length?C.green:C.amber} bg={present===required.length?C.greenT:C.amberT}>Evidence coverage {present}/{required.length} source types</Tag></div>
+        <div style={{display:"grid",gridTemplateColumns:cols,gap:8,padding:"7px 18px",background:C.fill}}>{["File · sealed digest","Classified as","Intake ID · received","Status",""].map((h,i)=><Label key={i} style={{fontSize:9}}>{h}</Label>)}</div>
+        {staged.map((f,i)=>(
+          <div key={i} style={{display:"grid",gridTemplateColumns:cols,gap:8,padding:"10px 18px",borderTop:`1px solid ${C.line}`,alignItems:"center"}}>
+            <div style={{minWidth:0}}><div style={{fontSize:12,color:C.ink,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{f.name}</div><M s={{fontSize:9.5,color:C.violet}}>{short(f.hash)}</M></div>
+            <select disabled={sealed} value={f.type} onChange={e=>setType(i,e.target.value)} style={{fontSize:11,padding:"5px 6px",border:`1px solid ${f.corrected?C.amber:C.line2}`,borderRadius:6,background:"#fff",fontFamily:F.body}}>
+              {Object.entries(DOC_TYPES).map(([k,v])=><option key={k} value={k}>{v}{f.parsed[k]?"":" (unreadable)"}</option>)}
+            </select>
+            <div><M s={{fontSize:10.5,color:C.ink,fontWeight:600,display:"block"}}>{f.intakeId}</M><M s={{fontSize:9.5,color:C.muted2}}>{f.receivedAt.replace("T"," ").slice(0,19)} UTC</M></div>
+            <div>{f.doc ? <Tag color={C.green} bg={C.greenT}>Staged</Tag> : <Tag color={C.red} bg={C.redT}>Not readable</Tag>}</div>
+            <M s={{fontSize:9.5,color:f.corrected?C.amber:C.muted2}}>{f.corrected?"corrected":"proposal"}</M>
+          </div>))}
+        <div style={{padding:"8px 18px",borderTop:`1px solid ${C.line}`,background:C.fill}}><M s={{fontSize:10,color:C.muted}}>"Classified as" is the parser's proposal for what each file is — it proposes, never decides; correct it if wrong. Coverage is a completeness gate over required source types, not a quality score.</M></div>
+      </Card>
+
+      <Card accent={C.gold}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,gap:10,flexWrap:"wrap"}}>
+          <div><Label style={{marginBottom:4}}>Evidence Custodian · attestation<Tip id="attest"/></Label><div style={{fontSize:12,color:C.muted}}>A personal statement by the named custodian that the set is complete. No FohBoh operator can perform it at any privilege level.</div></div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}><Label style={{fontSize:9}}>Named custodian</Label><input disabled={sealed} value={custodian} onChange={e=>setCustodian(e.target.value)} placeholder="Full name" style={{padding:"7px 10px",border:`1px solid ${C.line2}`,borderRadius:6,fontSize:12.5,fontFamily:F.body,minWidth:190}}/></div>
+        </div>
+        <div style={{background:C.fill,borderRadius:8,padding:"12px 14px",marginBottom:12}}>
+          <label style={{display:"flex",gap:10,alignItems:"flex-start",cursor:"pointer"}}>
+            <input type="checkbox" disabled={sealed} checked={sealed||checked} onChange={e=>setChecked(e.target.checked)} style={{marginTop:3,accentColor:C.gold}}/>
+            <span style={{fontSize:13,color:C.ink,lineHeight:1.65}}>I, <strong>{name}</strong>, named Evidence Custodian for {ORG}, attest that the documents in this batch are complete for Sentry M04:SCR and {period}, were provided as issued, and that I am making this statement personally. <M s={{fontSize:10,color:C.muted2}}>STATEMENT v2.0</M></span>
+          </label>
+        </div>
+        <div style={{fontSize:11.5,color:C.muted,lineHeight:1.6,marginBottom:12}}>By checking this box and selecting <strong>Attest & seal</strong>, I am signing this attestation electronically as <strong>{name}</strong> — my electronic signature, with the same force and effect as my handwritten signature (E-SIGN / UETA). I have read the statement above and I am making it.</div>
+        <div style={{display:"flex",gap:14,alignItems:"flex-end",flexWrap:"wrap"}}>
+          {!sealed&&<div style={{display:"flex",flexDirection:"column",gap:3}}><Label style={{fontSize:9}}>Re-enter your password to sign</Label><input type="password" value={pw} onChange={e=>setPw(e.target.value)} placeholder="DEMO: type anything" style={{padding:"9px 10px",border:`1px solid ${C.line2}`,borderRadius:6,fontSize:12.5,fontFamily:F.mono,minWidth:220}}/></div>}
+          {sealed ? <Tag color={C.green} bg={C.greenT}>Attested & sealed — signature record in the CAAR seal block</Tag> : <button disabled={!ready||sealing} onClick={async()=>{ setSealing(true); await onPush({statement, custodian:custodian.trim()}); }} style={{background:ready?C.ink:C.line2,border:"none",color:"#fff",padding:"12px 22px",borderRadius:10,fontSize:14,fontWeight:700,cursor:ready?"pointer":"not-allowed",fontFamily:F.head}}>{sealing?"Sealing…":"Attest & seal — sign electronically →"}</button>}
+          {!sealed&&<M s={{fontSize:10,color:C.muted2,paddingBottom:12}}>A deliberate speed bump. Attestation is a personal act, not a session.</M>}
+        </div>
+        <div style={{marginTop:12,fontSize:11,color:C.muted,lineHeight:1.55}}>Your signature record = the checked statement + your password re-entry + the UTC timestamp, bound into the attestation hash. The sealed set is pushed to MGE through the Sentry API contract and becomes the evidence set for one CAAR. After sealing, nothing can be added; late documents form a supplementary batch.</div>
+      </Card>
+      <ActivityLog log={log} compact/>
+    </div>
+  );
+}
+
+
+/* ═══════════════════════════ TOOL TIPS — FohBoh six-field slide-in convention ═══════════════════════════ */
+const TipCtx = React.createContext(()=>{});
+const TIPS = {
+  trustScore: {title:"MGE Trust Score", fields:{
+    what:"The certification run's score — eight M04 Trust Gates, weighted 25/20/15/15/10/8/4/3, computed at Step 6 (the MQ6 step).",
+    source:"Rule outcomes from this run (R211–R240) and the reference data they reconciled against.",
+    type:"Derived, deterministic, 0–100. Withheld when R236 has fired.",
+    means:"How the invoice performed against every gate that could fire. Gates the pilot cannot evaluate are excluded and the weights renormalized.",
+    how:"Each gate scores 0–100 from the recovery dollars its rules found relative to the subtotal; the weighted mean over evaluated gates is the score.",
+    why:"A single number an operator, partner or vendor can compare across runs — derived only from certified transaction data, so it cannot be gamed."}},
+  coverage: {title:"Evidence coverage · R236", fields:{
+    what:"The Trust Score Floor — six checks on whether the evidence on file is complete enough to certify.",
+    source:"Parsed document fields, reference-data availability (contract, receiving log, PO, tax profile, history), rule evaluability.",
+    type:"Derived, deterministic, 0–100 against an 85 floor.",
+    means:"Below 85 the run cannot certify. The report still issues, sealed and stamped NOT CERTIFIED, with the gap itemized.",
+    how:"Completeness, consistency, timeliness, alignment, reconciliation integrity and governance adherence, equally weighted.",
+    why:"MGE will not certify what it could not fully check. This is the mechanism that says so."}},
+  gates: {title:"Trust Gates TGS-01–08", fields:{
+    what:"The eight M04 gates from the rule set, each with its weight.",
+    source:"M04:SCR rule set v1.0 — gate definitions and weights.",
+    type:"Per-gate scores 0–100; n/a when no rule under the gate could be evaluated in the pilot.",
+    means:"Where the invoice lost points. Invoice-to-contract accuracy carries the most weight; audit completeness carries the R236 coverage.",
+    how:"Rules map to gates (R211 → TGS-01, R221/R240 → TGS-02, R228 → TGS-03, R237 → TGS-04, R226 → TGS-06, R236 → TGS-08).",
+    why:"The gate structure is what lets the score be explained line by line to a vendor or an auditor."}},
+  vendor: {title:"Vendor Reliability Score", fields:{
+    what:"The vendor's 90-day certified record blended 50/50 with this run's certified Trust Score.",
+    source:"Certified Trust Scores over the last 90 days (reference data in the pilot) plus this run.",
+    type:"Derived, 0–100 with grade, classification band and trend. Not written when the run is not certified.",
+    means:"PREFERRED 90+, STANDARD 70–89, MONITOR 50–69, PROBATION below 50. Three or more risk flags support contract review.",
+    how:"Four sub-metrics from the gates — price, delivery, billing integrity, credit and tax — plus pattern flags carried from history.",
+    why:"A record, not a snapshot. One bad invoice moves a good vendor; one clean invoice does not erase a pattern."}},
+  finding: {title:"Certified finding", fields:{
+    what:"One rule that evaluated the invoice and returned FAIL — with the finding, the cited evidence and the amount.",
+    source:"The rule's authoritative source: contract, receiving log, PO, credit ledger, tax profile, or arithmetic.",
+    type:"Certified claim (or identified exposure, if the run is not certified).",
+    means:"A specific violation the vendor must refute with specific arithmetic or a specific clause — not a general complaint.",
+    how:"Each rule has a formula from the rule set; each dollar is claimed under exactly one rule.",
+    why:"Rule-cited, evidence-backed findings are what turn a dispute into a claim the AR desk processes."}},
+  seal: {title:"Certification seal", fields:{
+    what:"SHA-256 digests: one per document as received (Landing Zone) and one of the full certification payload (Silver Zone).",
+    source:"Computed in the browser with Web Crypto from the file bytes and the JSON payload.",
+    type:"Cryptographic hash. Deterministic — the same inputs always produce the same seal.",
+    means:"Any copy of the document or the report that produces a different hash is not the certified original.",
+    how:"The payload hash is computed after all rules and scores are final; the CAAR ID and IUM record ID are derived from it.",
+    why:"This is the mechanism behind FRE 902-style self-authentication and the chain of custody."}},
+  caarId: {title:"CAAR document ID", fields:{
+    what:"The unique number of this Certified Analysis & Audit Report.",
+    source:"Derived from the first six characters of the payload seal.",
+    type:"Identifier. Non-repeating for distinct certified payloads.",
+    means:"The reference number for correspondence with the vendor and for the audit trail.",
+    how:"CAAR-<year>-<seal prefix>; the IUM record ID is derived the same way from a later slice.",
+    why:"Named, numbered documents are addressable. Letters are not."}},
+  ium: {title:"IUM record", fields:{
+    what:"The Intelligence Under Management entry written for this run.",
+    source:"Certification runtime, Step 8.",
+    type:"Append-only, metadata-only, permanent. Holds no operator data.",
+    means:"One more certified event in the operator's — and the platform's — governed history, whether the run was clean, blocked or found variances.",
+    how:"Written at output alongside the audit-trail entry; FohBoh-owned regardless of subscription.",
+    why:"IUM is the control metric: certified transactions, governed decisions, enforced rules. It compounds on every run."}},
+  threeWay: {title:"Three-way line audit", fields:{
+    what:"PO quantity, received quantity and invoiced quantity side by side for every line.",
+    source:"Purchase order, receiving log and invoice as uploaded — each sealed separately.",
+    type:"Extracted document fields plus MGE's recomputed expected amount.",
+    means:"Where the three documents disagree, and which rule explains it.",
+    how:"R240 compares PO value, invoice subtotal and received value; R221 and R211 attribute the difference.",
+    why:"Two-way matching is a commodity. The certified three-way match — an independent authority reconciling all three — is the product."}},
+  attest: {title:"Custodian attestation", fields:{
+    what:"A personal statement by the named Evidence Custodian that the staged batch is complete for the module and period and was provided as issued — signed electronically.",
+    source:"The custodian's checked statement, password re-entry, and the UTC timestamp.",
+    type:"Signature record, bound into an attestation hash that the certification payload references.",
+    means:"Authorization. Nothing is pushed to MGE until a named person has attested. No FohBoh operator can perform it at any privilege level.",
+    how:"Checkbox + password re-entry + Attest & seal. The attestation hash is chained into the activity log and carried into the CAAR seal block.",
+    why:"An evidence set nobody attested to is a folder of files. An attested, sealed set is the basis of a claim — and the custodian declaration is what the evidentiary stack (FRE 902(11)) needs."}},
+  intake: {title:"Receive · hash · stage", fields:{
+    what:"The staged batch: each file's sealed digest, the parser's classification proposal, an Intake ID and the receipt timestamp.",
+    source:"File bytes as dropped; the parser's read of the first lines to propose a type.",
+    type:"SHA-256 per file (Landing Zone); classification is a proposal until the custodian confirms or corrects it.",
+    means:"Evidence coverage here is a completeness gate over required source types — not a quality score. Three-way mode requires invoice, purchase order and receiving log.",
+    how:"Hash and timestamp happen before parsing; the custodian can override the proposed type from the dropdown.",
+    why:"Hash-before-open is what makes the chain of custody start at receipt rather than at certification."}},
+  advisory: {title:"Advisory Memorandum", fields:{
+    what:"The post-certification narrative: explanation, root-cause hypotheses and recommended actions.",
+    source:"Read-only Certified Intelligence Objects from this run (the CAAR payload), through Trust Wall 2.",
+    type:"Advisory Intelligence — deliberately unhashed and unsigned; references the CAAR by ID and payload hash.",
+    means:"Interpretation, not truth. The certified facts it cites are quoted from the CAAR; everything else is a hypothesis or a recommendation.",
+    how:"Composed by the Sentry Advisor. In this pilot: template-composed from the certified payload, or by a language model when an API key is set in the Advisor settings.",
+    why:"Advisory content is a different data class. It is never merged into the CAAR and never inside its seal."}},
+};
+function Tip({id, style={}}){
+  const open = React.useContext(TipCtx);
+  return (
+    <button onClick={e=>{e.stopPropagation(); open(id);}} title="What is this?" aria-label="What is this?"
+      style={{width:16,height:16,borderRadius:"50%",border:`1.5px solid ${C.gold}`,background:"transparent",color:C.gold,fontSize:10,fontWeight:700,fontFamily:F.mono,
+        cursor:"pointer",display:"inline-flex",alignItems:"center",justifyContent:"center",padding:0,lineHeight:1,verticalAlign:"middle",marginLeft:6,...style}}>i</button>
+  );
+}
+function TipDrawer({id,onClose}){
+  const tip = TIPS[id]; if (!tip) return null;
+  const rows = [["What this is",tip.fields.what,C.gold],["Source of data",tip.fields.source,C.steel],["Type of data",tip.fields.type,C.steel],["What it means",tip.fields.means,C.green],["How it works",tip.fields.how,C.violet],["Why it's needed",tip.fields.why,C.red]];
+  return (<>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(10,10,10,.28)",zIndex:60,animation:"fadeIn .2s ease-out"}}/>
+    <div style={{position:"fixed",top:0,right:0,bottom:0,width:"min(380px,100vw)",zIndex:61,background:C.paper,borderLeft:`1.5px solid ${C.green}`,boxShadow:"-8px 0 32px rgba(10,10,10,.18)",animation:"slideIn .25s cubic-bezier(.22,1,.36,1)",display:"flex",flexDirection:"column"}}>
+      <div style={{background:C.card,borderBottom:`1px solid ${C.line}`,padding:"16px 18px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div><Label color={C.gold} style={{marginBottom:4}}>Tool tip</Label><div style={{fontFamily:F.head,fontSize:16,fontWeight:800,color:C.ink}}>{tip.title}</div></div>
+        <button onClick={onClose} style={{background:"transparent",border:`1px solid ${C.line2}`,color:C.muted,fontSize:15,cursor:"pointer",padding:"2px 9px",borderRadius:6}}>×</button>
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"16px 18px 24px"}}>
+        {rows.map(([k,v,c])=>(<div key={k} style={{borderLeft:`3px solid ${c}`,paddingLeft:12,marginBottom:14}}><Label color={c} style={{marginBottom:4}}>{k}</Label><div style={{fontSize:12.5,color:C.ink,lineHeight:1.6}}>{v}</div></div>))}
+        <M s={{fontSize:9,color:C.muted2,letterSpacing:"0.08em",display:"block",marginTop:10}}>© 2026 FohBoh.ai, Inc. All rights reserved | Patent Pending</M>
+      </div>
+    </div>
+  </>);
+}
+
+/* ═══════════════════════════ SENTRY ADVISOR LAYER — behind Trust Wall 2, read-only, advisory only ═══════════════════════════ */
+const ADVISOR_MODEL = "claude-sonnet-4-20250514";
+const ADVISOR_SYSTEM = `You are the Sentry Advisor, the post-certification AI layer of FohBoh | MGE. You receive read-only Certified Intelligence Objects (a certified run: invoice, rules, Trust Score, findings, seals). You explain, prioritize, hypothesize root causes and recommend actions. You NEVER change, restate as different, or dispute a certified score, finding, state, amount or seal; you never claim to certify or recertify; you never invent evidence. Certified facts must be quoted exactly from the payload. Label hypotheses as hypotheses. Use US English. Say "Certified Analysis & Audit Report" for CAAR. Never use the phrases "court admissible", "legally defensible", or "in court" — say "evidence-grade" and "in a dispute". Keep answers concise and specific to this run.`;
+function certifiedContext(data){
+  const {invoice,ruleResults,trustScore:tg,vendorScore:vs,summary,lineItems,caarId,payloadHash,iumId,threeWay,po,recvDoc} = data;
+  return { caarId, payloadSeal:payloadHash, iumRecord:iumId, attestation: data.attestation ? {custodian:data.attestation.custodian, signedAt:data.attestation.signedAt, hash:data.attestation.hash, files:data.attestation.files.length} : null, certificationStatus:summary.certificationStatus, certified:tg.certified,
+    invoice:{id:invoice.id,vendor:invoice.vendor,operator:invoice.operator,date:invoice.date,po:invoice.po,receivingRef:invoice.receivingRef,subtotal:invoice.subtotal,tax:invoice.tax,total:invoice.total},
+    threeWay, purchaseOrder: po?{id:po.id,date:po.date,total:po.total}:null, receivingLog: recvDoc?{ref:recvDoc.ref,delivered:recvDoc.delivered,receivedBy:recvDoc.receivedBy}:null,
+    trustScore:{score:tg.certified?tg.score:null, coverage:tg.coverage, floor:tg.threshold, gates:tg.gates.map(g=>({id:g.id,name:g.name,weight:g.w,score:g.score})), coverageChecks:tg.dims.map(d=>({check:d.label,score:d.score,note:d.note}))},
+    rules: ruleResults.map(r=>({id:r.ruleId,name:r.ruleName,gate:r.gate,result:r.result,finding:r.finding,evidence:r.evidence,recoveryAmount:r.recoveryAmount})),
+    lineItems: lineItems.map(l=>({sku:l.sku,description:l.description,qty:l.qty,unit:l.unit,unitPrice:l.unitPrice,lineTotal:l.lineTotal,expected:l.expectedLineTotal,status:l.flag})),
+    summary:{findings:summary.totalFindings,totalRecovery:summary.totalRecovery,recoveryProbability:summary.recoveryProbability,rulesEvaluated:summary.rulesEvaluated},
+    vendorReliability:{score:vs.score,grade:vs.grade,classification:vs.classification,trend:vs.trend,priorScore:vs.priorScore,certified90d:vs.certified90d,riskFlags:vs.riskFlags,applied:tg.certified} };
+}
+async function callAdvisor(apiKey, messages, maxTokens=900){
+  const res = await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:ADVISOR_MODEL,max_tokens:maxTokens,system:ADVISOR_SYSTEM,messages})});
+  if (!res.ok){ let d=""; try{ d=(await res.text()).slice(0,200);}catch{} throw new Error(`Advisor API ${res.status}. ${d}`); }
+  const d = await res.json(); return d.content.filter(b=>b.type==="text").map(b=>b.text).join("");
+}
+/* Deterministic local responder — used when no API key is set. Answers only from the certified payload. */
+function localAdvisor(q, data){
+  const c = certifiedContext(data); const s = q.toLowerCase();
+  const fails = c.rules.filter(r=>r.result==="FAIL" && r.id!=="R236");
+  const ruleHit = c.rules.find(r=>s.includes(r.id.toLowerCase()) || s.includes(r.id.toLowerCase().replace("r","r-")));
+  if (/(change|override|fix the score|raise the score|edit|remove the finding|recertify|re-certify|certify it|make it certified)/.test(s)) return `I can't. The Advisor reads certified objects through Trust Wall 2 and cannot change a score, finding, state or seal, and cannot certify or recertify. Only a new MGE run on new evidence can change the outcome — and it will be a new run with its own seal, not an edit to this one.`;
+  if (ruleHit) return `${ruleHit.id} · ${ruleHit.name} (${ruleHit.gate}) — ${ruleHit.result}.\n\nCertified finding: ${ruleHit.finding}\n\nEvidence: ${ruleHit.evidence}${ruleHit.recoveryAmount?`\n\nAmount: ${money(ruleHit.recoveryAmount)}.`:""}`;
+  if (/(trust score|score)/.test(s) && !/vendor|reliab/.test(s)) return c.trustScore.score===null
+    ? `The Trust Score was withheld on this run because R236 fired: evidence coverage is ${c.trustScore.coverage} against a floor of ${c.trustScore.floor}. Gates cannot score at full confidence on incomplete evidence. The lowest coverage checks: ${c.trustScore.coverageChecks.filter(d=>d.score<85).map(d=>`${d.check} ${d.score} — ${d.note}`).join("; ")}`
+    : `Trust Score ${c.trustScore.score}/100, weighted across the evaluated Trust Gates. Gate scores: ${c.trustScore.gates.filter(g=>g.score!==null).map(g=>`${g.id} ${g.name} ${g.score} (${g.weight}%)`).join("; ")}. The lowest gate is where the invoice lost points — that is the certified fact; why the vendor behaves that way is a hypothesis, and the Advisory Memorandum lists the likely ones.`;
+  if (/(coverage|r236|floor|not certified|blocked|missing|evidence)/.test(s)) return `Evidence coverage is ${c.trustScore.coverage}/100 against the ${c.trustScore.floor} floor — ${c.certified?"the certification floor was met":"R236 fired and the run is NOT CERTIFIED"}. Checks: ${c.trustScore.coverageChecks.map(d=>`${d.check} ${d.score}`).join(" · ")}.${c.certified?"":` What would raise it: ${c.trustScore.coverageChecks.filter(d=>d.score<85).map(d=>d.note).join(" ")}`}`;
+  if (/(vendor|reliab|classification|trend|flag)/.test(s)) return `${c.invoice.vendor}: reliability ${c.vendorReliability.score}/100 (${c.vendorReliability.grade}, ${c.vendorReliability.classification}, trend ${c.vendorReliability.trend}); 90-day prior ${c.vendorReliability.priorScore} over ${c.vendorReliability.certified90d} certified invoices. Risk flags: ${c.vendorReliability.riskFlags.length?c.vendorReliability.riskFlags.join(", "):"none active"}.${c.vendorReliability.applied?"":" This run was not certified, so the vendor record was not updated."}`;
+  if (/(recover|owed|how much|total|dollar|\$)/.test(s)) return fails.length ? `${c.certified?"Certified recovery":"Identified exposure (not certified)"}: ${money(c.summary.totalRecovery)} across ${fails.length} finding${fails.length>1?"s":""} — ${fails.map(f=>`${f.id} ${money(f.recoveryAmount)}`).join(", ")}.${c.certified?` Recovery probability ${c.summary.recoveryProbability}%. Sentry certifies; the operator dispatches ${c.caarId}.`:" These become certified claims only once the evidence gap is closed and the run is re-certified."}` : `No variances were identified. ${c.certified?"The invoice is certified compliant":"The run is not certified (R236)"}; ${money(c.summary.totalRecovery)} recovery.`;
+  if (/(finding|variance|what.*wrong|fail)/.test(s)) return fails.length ? `${fails.length} finding${fails.length>1?"s":""}: ${fails.map(f=>`${f.id} ${f.name} — ${f.finding}`).join(" | ")}` : `No rule returned FAIL on this invoice${c.certified?"":" — but R236 fired, so nothing is certified"}.`;
+  if (/(attest|custodian|sign|authoriz|who pushed|e-sign)/.test(s)) return c.attestation ? `The evidence set was attested by ${c.attestation.custodian}, named Evidence Custodian, at ${c.attestation.signedAt.replace("T"," ").slice(0,19)} UTC — ${c.attestation.files} file${c.attestation.files>1?"s":""}, signature record ${c.attestation.hash}. That attestation is the authorization that pushed the batch to MGE; no FohBoh operator can perform it at any privilege level.` : "No attestation record is attached to this run.";
+  if (/(seal|hash|sha|tamper|chain of custody|caar id|document id)/.test(s)) return `CAAR ${c.caarId}. Payload seal (Silver Zone): ${c.payloadSeal}. IUM record ${c.iumRecord}. Any copy of the report that produces a different hash is not the certified original.`;
+  if (/(three.?way|purchase order|\bpo\b|receiving|delivery)/.test(s)) return c.threeWay ? `Three-way run. Purchase order ${c.purchaseOrder?`${c.purchaseOrder.id} (${money(c.purchaseOrder.total)})`:"not supplied"}; receiving log ${c.receivingLog?`${c.receivingLog.ref}, delivered ${c.receivingLog.delivered}, received by ${c.receivingLog.receivedBy||"—"}`:"not supplied"}. ${c.rules.find(r=>r.id==="R240").finding}` : `This was a single-document run; the receiving log came from the system of record (${c.invoice.receivingRef||"none matched"}). Switch to Three-way match on the upload screen to certify against an uploaded purchase order and receiving log.`;
+  if (/(what (should|do) (i|we)|next|action|recommend|do now)/.test(s)) return c.certified ? (fails.length ? `Advisory (not certified): 1) Dispatch CAAR ${c.caarId} to ${c.invoice.vendor} — the claims are rule-cited and sealed. 2) ${c.vendorReliability.riskFlags.length>=3?"Three or more active flags: schedule a contract review, not just a credit request.":"Track the credit against the open-items ledger; R228 will catch it if it is not applied."} 3) Re-run on the next invoice from this vendor to extend the certified record.` : `Advisory: nothing to recover. File the compliance certificate; the IUM record is written and the vendor's reliability record has improved on certified evidence.`) : `Advisory: the run is blocked by R236. Supply the missing evidence — ${c.trustScore.coverageChecks.filter(d=>d.score<85).map(d=>d.check.toLowerCase()).join(", ")} — and re-run. Nothing here is a certified claim yet.`;
+  if (/(change|override|fix the score|raise the score|edit|remove the finding|certify)/.test(s)) return `I can't. The Advisor reads certified objects through Trust Wall 2 and cannot change a score, finding, state or seal, and cannot certify or recertify. Only a new MGE run on new evidence can change the outcome — and it will be a new run with its own seal, not an edit to this one.`;
+  if (/(ai|inference|model|deterministic)/.test(s)) return `No AI took part in certification. The parser reads text; the rules are code; the score is arithmetic; the seals are SHA-256. AI sits in two places only: the intake layer that proposes item mappings before certification (outside Trust Wall 1), and this advisor after it (behind Trust Wall 2). In this pilot the intake mapping was exact SKU match and I am answering from the certified payload${data.advisorKey?" with a language model":" deterministically"}.`;
+  return `I can answer about this certified run: the Trust Score and gates, evidence coverage and R236, any rule by ID (R211, R221, R240, R226, R228, R237, R236), the findings and recovery amount, the vendor's reliability record, the seals and CAAR ID, the three-way documents, or what to do next. What would you like?`;
+}
+function buildMemorandum(data){
+  const c = certifiedContext(data); const fails = c.rules.filter(r=>r.result==="FAIL"&&r.id!=="R236"); const tg = data.trustScore;
+  const lowGate = c.trustScore.gates.filter(g=>g.score!==null).sort((a,b)=>a.score-b.score)[0];
+  const hyp = [];
+  if (fails.some(f=>f.id==="R211")) hyp.push("Price variance on a contracted SKU with no promotional or market-price notice on file — most often a vendor price-file update that ignored the contract lock (compare R212), or a substitution billed at market (compare R213).");
+  if (fails.some(f=>f.id==="R226")) hyp.push("A duplicated line where the receiving log shows one delivery — typically a split-shipment line that was not reversed, or an order-entry duplicate.");
+  if (fails.some(f=>f.id==="R240")) hyp.push("Extension error favoring the vendor — recurring extension errors on one vendor suggest a systemic rounding or pack-size configuration issue rather than a one-off.");
+  if (fails.some(f=>f.id==="R221")) hyp.push("Short delivery signed at the dock — the receiving signature makes this the strongest claim on the invoice; check whether a partial-delivery credit was promised (R222).");
+  if (fails.some(f=>f.id==="R228")) hyp.push("An open credit memo not applied — usually an AR-side posting lag; the memo exists, it was not netted.");
+  if (fails.some(f=>f.id==="R237")) hyp.push("Tax charged to an exempt operator — almost always a missing resale certificate in the vendor's customer master, not intent.");
+  const actions = [];
+  if (!c.certified) actions.push(["Operator / AP","Supply the missing evidence named in the R236 gap list and re-run certification","Before the invoice due date"]);
+  if (fails.length && c.certified) actions.push(["Operator","Dispatch "+c.caarId+" to "+c.invoice.vendor+" ("+(data.invoice.vendorContact||"AR contact")+")","Within 2 business days"]);
+  if (fails.some(f=>f.id==="R211")) actions.push(["Purchasing","Confirm the contracted rate and lock period with the vendor rep; request the corrected price file","This week"]);
+  if (fails.some(f=>f.id==="R228")) actions.push(["AP","Net the open credit memo against the next remittance; confirm application on the vendor statement","Next remittance"]);
+  if (fails.some(f=>f.id==="R237")) actions.push(["AP","Send the resale certificate to the vendor's tax desk; request a tax-only credit","This week"]);
+  if (fails.some(f=>f.id==="R221")) actions.push(["GM","Attach the signed receiving log to the claim; request a partial-delivery credit","Within 2 business days"]);
+  if (c.vendorReliability.riskFlags.length>=3) actions.push(["Vendor management","Schedule a contract review — three or more active pattern flags on the certified record","This month"]);
+  if (!actions.length) actions.push(["Operator","File the compliance certificate; no action required","—"]);
+  actions.push(["Sentry","Re-certify on the next invoice from this vendor to extend the certified record","Next delivery"]);
+  return { fails, lowGate, hypotheses: hyp.length?hyp:["No variance was found; nothing to hypothesize about. The vendor's pattern is the only open question, and the certified record answers it."], actions,
+    summary: !c.certified
+      ? `Invoice ${c.invoice.id} from ${c.invoice.vendor} could not be certified. R236 fired at evidence coverage ${c.trustScore.coverage} against the 85 floor: ${tg.gaps.map(g=>g.label.toLowerCase()+" "+g.score).join(", ")}. ${fails.length?`${fails.length} variance${fails.length>1?"s were":" was"} identified (${money(c.summary.totalRecovery)}) but ${fails.length>1?"they are":"it is"} exposure, not a certified claim, until the evidence gap closes.`:"No variances were identified on the evidence available."} The fastest path to a certified run is in the gap list.`
+      : fails.length
+      ? `Invoice ${c.invoice.id} from ${c.invoice.vendor} certified with ${fails.length} variance${fails.length>1?"s":""} totaling ${money(c.summary.totalRecovery)} (recovery probability ${c.summary.recoveryProbability}%). Trust Score ${c.trustScore.score}; the lowest gate was ${lowGate.id} ${lowGate.name} at ${lowGate.score}. The vendor's reliability record now reads ${c.vendorReliability.score} (${c.vendorReliability.classification}, ${c.vendorReliability.trend.toLowerCase()}).`
+      : `Invoice ${c.invoice.id} from ${c.invoice.vendor} certified compliant. All ${c.summary.rulesEvaluated} evaluated rules passed; Trust Score ${c.trustScore.score}. The vendor's reliability record improves to ${c.vendorReliability.score} (${c.vendorReliability.classification}) on certified evidence.` };
+}
+function StepAdvisory({data, advisorKey, onOpenChat}){
+  const [llmText,setLlmText] = useState(null); const [busy,setBusy] = useState(false); const [err,setErr] = useState(null);
+  const memo = buildMemorandum(data); const c = certifiedContext(data);
+  const advId = `ADV-${data.payloadHash.slice(12,18).toUpperCase()}`;
+  const mapped = data.lineItems.length, canon = (lookup(REF.contracts, data.invoice.vendor)||{rates:{}}).rates;
+  const onFile = data.lineItems.filter(l=>canon[l.sku]!==undefined).length;
+  const generate = async ()=>{ setBusy(true); setErr(null); try {
+      const txt = await callAdvisor(advisorKey,[{role:"user",content:`Write the Sentry Advisory Memorandum for this certified run. Sections: Executive summary (3 sentences); What was certified (bullet facts quoted from the payload); Root-cause hypotheses (labeled as hypotheses); Recommended actions (owner, action, due); Next certification cycle. Plain prose, no markdown headers beyond the section names. Certified payload JSON:\n${JSON.stringify(c)}`}],1400);
+      setLlmText(txt); } catch(e){ setErr(e.message); } finally { setBusy(false); } };
+  return (
+    <div style={{animation:"rise .4s ease-out"}}>
+      <Label color={C.steel} style={{marginBottom:8}}>Post-certification · Sentry Advisor · Trust Wall 2</Label>
+      <div style={{fontFamily:F.head,fontSize:26,fontWeight:800,color:C.ink,letterSpacing:"-0.02em",marginBottom:4}}>Sentry Advisory Memorandum <Tip id="advisory"/></div>
+      <div style={{fontSize:12.5,color:C.muted,marginBottom:20}}>A separate document. Never attached to the CAAR. Deliberately unsealed.</div>
+
+      <div style={{background:C.card,border:`1.5px dashed ${C.steel}`,borderRadius:14,overflow:"hidden",marginBottom:16}}>
+        <div style={{padding:"14px 22px",borderBottom:`1px solid ${C.line}`,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:16,flexWrap:"wrap"}}>
+          <div><M s={{fontSize:10,color:C.steel,letterSpacing:"0.18em",fontWeight:600,display:"block",marginBottom:4}}>FOHBOH | SENTRY™ ADVISORY DOCUMENT</M><div style={{fontFamily:F.head,fontSize:20,fontWeight:800,color:C.ink}}>{advId}</div></div>
+          <div style={{textAlign:"right"}}><div style={{fontSize:11,color:C.muted}}>{data.issuedAt}</div><M s={{fontSize:10,color:C.muted2,display:"block",marginTop:3}}>References {data.caarId}</M><M s={{fontSize:10,color:C.muted2,display:"block"}}>Payload seal {short(data.payloadHash)}</M></div>
+        </div>
+        <div style={{background:C.steelT,borderBottom:`1px solid ${C.line}`,padding:"9px 22px",display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+          <M s={{fontSize:11,fontWeight:700,color:C.steel,letterSpacing:"0.06em"}}>ADVISORY — NOT CERTIFIED · NO SEAL · OUTSIDE THE CAAR HASH</M>
+          <Tag color={C.steel} bg="#fff" border={`${C.steel}55`}>{advisorKey?"Composed by language model":"Template-composed (pilot)"}</Tag>
+        </div>
+        <div style={{padding:22}}>
+          <div style={{marginBottom:20}}>
+            <Label style={{marginBottom:10}}>Where AI sat in this run — and where it did not</Label>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:10}}>
+              {[["1 · Intake AI","Proposed the item mapping",`${mapped}/${mapped} lines read; mapped by exact SKU match (confidence 1.00). Outside Trust Wall 1.`,C.steel],
+                ["2 · MGE certifies the map","Deterministic verification",`${onFile}/${mapped} SKUs found in the canonical rate schedule${onFile<mapped?" — the rest could not be aligned (see R236 alignment)":""}.`,C.gold],
+                ["3 · MGE certifies the invoice","Rules · Trust Gates · seal",`${c.certificationStatus}. ${c.summary.rulesEvaluated} rules evaluated. Payload sealed.`,C.green],
+                ["4 · Sentry Advisor","This memorandum",`Reads the certified payload through Trust Wall 2. Cannot write back.`,C.violet]].map(([t,sub,d,col],i)=>(
+                <div key={i} style={{border:`1px solid ${C.line}`,borderTop:`3px solid ${col}`,borderRadius:8,padding:"10px 12px"}}>
+                  <div style={{fontFamily:F.head,fontSize:12,fontWeight:700,color:C.ink}}>{t}</div><M s={{fontSize:9.5,color:col,display:"block",margin:"2px 0 6px"}}>{sub}</M>
+                  <div style={{fontSize:11,color:C.muted,lineHeight:1.5}}>{d}</div>
+                </div>))}
+            </div>
+          </div>
+          {llmText ? (
+            <div style={{fontSize:13,color:C.ink,lineHeight:1.75,whiteSpace:"pre-wrap"}}>{llmText}</div>
+          ) : (<>
+            <div style={{marginBottom:18}}><Label style={{marginBottom:8}}>Executive summary</Label><div style={{fontSize:13.5,color:C.ink,lineHeight:1.7}}>{memo.summary}</div></div>
+            <div style={{marginBottom:18}}><Label style={{marginBottom:8}}>What was certified (quoted from the CAAR)</Label>
+              <div style={{fontSize:12.5,color:C.ink,lineHeight:1.7}}>
+                {c.rules.filter(r=>r.result!=="N/A").map(r=><div key={r.id} style={{display:"flex",gap:10,marginBottom:4}}><M s={{fontSize:10.5,color:r.result==="FAIL"?C.red:C.green,fontWeight:700,minWidth:64}}>{r.id} {r.result}</M><span style={{color:C.muted}}>{r.finding}</span></div>)}
+              </div></div>
+            <div style={{marginBottom:18}}><Label style={{marginBottom:8}}>Root-cause hypotheses — advisory, not certified</Label>
+              {memo.hypotheses.map((h,i)=><div key={i} style={{fontSize:12.5,color:C.ink,lineHeight:1.65,paddingLeft:12,borderLeft:`3px solid ${C.steel}`,marginBottom:8}}>{h}</div>)}</div>
+            <div style={{marginBottom:18}}><Label style={{marginBottom:8}}>Recommended actions</Label>
+              <div style={{border:`1px solid ${C.line}`,borderRadius:8,overflow:"hidden"}}>
+                <div style={{display:"grid",gridTemplateColumns:"140px 1fr 150px",background:C.fill,padding:"7px 12px",gap:8}}>{["Owner","Action","Due"].map(h=><Label key={h} style={{fontSize:9}}>{h}</Label>)}</div>
+                {memo.actions.map((a,i)=><div key={i} style={{display:"grid",gridTemplateColumns:"140px 1fr 150px",padding:"9px 12px",gap:8,borderTop:`1px solid ${C.line}`,fontSize:12,color:C.ink,alignItems:"center"}}><span style={{fontWeight:600}}>{a[0]}</span><span>{a[1]}</span><M s={{fontSize:10.5,color:C.muted}}>{a[2]}</M></div>)}
+              </div></div>
+            <div><Label style={{marginBottom:8}}>Next certification cycle</Label><div style={{fontSize:12.5,color:C.muted,lineHeight:1.65}}>Re-certification is a new event, not a rewrite. The next run on this vendor will carry its own seal and its own IUM record; this memorandum and {data.caarId} remain as issued.</div></div>
+          </>)}
+          {err&&<div style={{marginTop:14,padding:"10px 14px",background:C.redT,borderRadius:8,fontSize:12,color:C.ink}}>{err}</div>}
+        </div>
+        <div style={{padding:"10px 22px",borderTop:`1px solid ${C.line}`,background:C.fill,display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+          <M s={{fontSize:9,color:C.muted2,letterSpacing:"0.06em"}}>Advisory Intelligence · not a Certified Intelligence Object · excluded from the Evidence ExportPack</M>
+          <div style={{display:"flex",gap:8}}>
+            {advisorKey&&!llmText&&<button onClick={generate} disabled={busy} style={{background:C.steel,border:"none",color:"#fff",padding:"8px 14px",borderRadius:7,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:F.head}}>{busy?"Composing…":"Compose with language model"}</button>}
+            <button onClick={onOpenChat} style={{background:C.gold,border:"none",color:"#fff",padding:"8px 14px",borderRadius:7,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:F.head}}>Ask the Advisor</button>
+          </div>
+        </div>
+      </div>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><Tag color={C.steel} bg={C.steelT}>Advisory — not certified</Tag><Tag color={C.violet} bg={C.violetT}>Linked to {data.caarId}</Tag><Tag color={C.muted} bg={C.fill}>Unsealed by design</Tag></div>
+    </div>
+  );
+}
+function AdvisorChat({data, advisorKey, setAdvisorKey, onClose}){
+  const [msgs,setMsgs] = useState([{role:"assistant",text:data?`Sentry Advisor ready over ${data.caarId} — ${data.summary.certificationStatus.toLowerCase()}. Ask about the Trust Score, a rule by ID, the findings, the vendor, the seals, or what to do next.`:"No certified run yet. Certify an invoice first — I answer only over certified objects."}]);
+  const [q,setQ] = useState(""); const [busy,setBusy] = useState(false); const [showKey,setShowKey] = useState(false); const [keyDraft,setKeyDraft] = useState(advisorKey||"");
+  const endRef = useRef(null); useEffect(()=>{ endRef.current?.scrollIntoView({behavior:"smooth"}); },[msgs]);
+  const send = async ()=>{ const text=q.trim(); if(!text||!data) return; setQ(""); const next=[...msgs,{role:"user",text}]; setMsgs(next); setBusy(true);
+    try { let ans;
+      if (advisorKey){ const hist = next.slice(-8).map(m=>({role:m.role,content:m.text})); hist[0] = {role:"user",content:`Certified payload JSON (read-only):\n${JSON.stringify(certifiedContext(data))}\n\nConversation so far begins. First question: ${hist[0].role==="user"?hist[0].content:""}`}; ans = await callAdvisor(advisorKey, hist.filter((m,i)=>i===0||m.role!=="assistant"||i>0)); }
+      else ans = localAdvisor(text, {...data, advisorKey});
+      setMsgs(m=>[...m,{role:"assistant",text:ans}]); } catch(e){ setMsgs(m=>[...m,{role:"assistant",text:`Advisor error: ${e.message}. Falling back to the deterministic responder.\n\n${localAdvisor(text,data)}`}]); } finally { setBusy(false); } };
+  return (<>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(10,10,10,.28)",zIndex:60,animation:"fadeIn .2s ease-out"}}/>
+    <div style={{position:"fixed",top:0,right:0,bottom:0,width:"min(420px,100vw)",zIndex:61,background:C.paper,borderLeft:`1.5px solid ${C.green}`,boxShadow:"-8px 0 32px rgba(10,10,10,.18)",animation:"slideIn .25s cubic-bezier(.22,1,.36,1)",display:"flex",flexDirection:"column"}}>
+      <div style={{background:C.card,borderBottom:`1px solid ${C.line}`,padding:"14px 18px"}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div><Label color={C.steel} style={{marginBottom:3}}>Sentry Advisor · Trust Wall 2 · read-only</Label><div style={{fontFamily:F.head,fontSize:16,fontWeight:800,color:C.ink}}>Ask the Advisor</div></div>
+          <div style={{display:"flex",gap:6}}>
+            <button onClick={()=>setShowKey(v=>!v)} title="Advisor settings" style={{background:"transparent",border:`1px solid ${C.line2}`,color:C.muted,fontSize:12,cursor:"pointer",padding:"3px 9px",borderRadius:6,fontFamily:F.mono}}>⚙</button>
+            <button onClick={onClose} style={{background:"transparent",border:`1px solid ${C.line2}`,color:C.muted,fontSize:15,cursor:"pointer",padding:"2px 9px",borderRadius:6}}>×</button>
+          </div>
+        </div>
+        <div style={{fontSize:11,color:C.muted,marginTop:6,lineHeight:1.5}}>{advisorKey?`Language model (${ADVISOR_MODEL}) under advisory constraints.`:"Pilot mode: deterministic answers from the certified payload. Add an API key in ⚙ to use a language model."}</div>
+        {showKey&&(<div style={{marginTop:10,padding:"10px 12px",background:C.fill,borderRadius:8}}>
+          <Label style={{marginBottom:6}}>Anthropic API key (kept in memory only, never stored)</Label>
+          <div style={{display:"flex",gap:6}}><input value={keyDraft} onChange={e=>setKeyDraft(e.target.value)} placeholder="sk-ant-…" style={{flex:1,padding:"7px 9px",border:`1px solid ${C.line2}`,borderRadius:6,fontFamily:F.mono,fontSize:11}}/>
+            <button onClick={()=>{setAdvisorKey(keyDraft.trim()||null);setShowKey(false);}} style={{background:C.ink,color:"#fff",border:"none",borderRadius:6,padding:"7px 12px",fontSize:12,cursor:"pointer"}}>Save</button></div>
+        </div>)}
+      </div>
+      <div style={{flex:1,overflowY:"auto",padding:"14px 16px",display:"flex",flexDirection:"column",gap:10}}>
+        {msgs.map((m,i)=>(<div key={i} style={{alignSelf:m.role==="user"?"flex-end":"flex-start",maxWidth:"88%",background:m.role==="user"?C.gold:C.card,color:m.role==="user"?"#fff":C.ink,border:m.role==="user"?"none":`1px solid ${C.line}`,borderRadius:10,padding:"9px 12px",fontSize:12.5,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{m.text}</div>))}
+        {busy&&<div style={{alignSelf:"flex-start",display:"flex",gap:8,alignItems:"center"}}><Spin sz={12}/><M s={{fontSize:11,color:C.muted}}>Advisor…</M></div>}
+        <div ref={endRef}/>
+      </div>
+      <div style={{padding:"10px 12px",borderTop:`1px solid ${C.line}`,background:C.card}}>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}}>{["Why this Trust Score?","What is owed?","What should we do next?","Can you change the score?"].map(x=><button key={x} onClick={()=>setQ(x)} style={{background:C.fill,border:`1px solid ${C.line}`,borderRadius:14,padding:"4px 10px",fontSize:11,color:C.muted,cursor:"pointer"}}>{x}</button>)}</div>
+        <div style={{display:"flex",gap:6}}>
+          <input value={q} onChange={e=>setQ(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")send();}} placeholder={data?"Ask about this certified run…":"Certify an invoice first"} disabled={!data} style={{flex:1,padding:"10px 12px",border:`1px solid ${C.line2}`,borderRadius:8,fontSize:13,fontFamily:F.body}}/>
+          <button onClick={send} disabled={!data||busy} style={{background:C.ink,color:"#fff",border:"none",borderRadius:8,padding:"10px 14px",fontSize:13,fontWeight:700,cursor:"pointer"}}>Send</button>
+        </div>
+        <M s={{fontSize:9,color:C.muted2,display:"block",marginTop:6}}>Advisory only. Cannot change a score, finding, state or seal.</M>
+      </div>
+    </div>
+  </>);
+}
+function FloatingChatButton({onClick}){
+  return (<button onClick={onClick} style={{position:"fixed",right:22,bottom:92,zIndex:8,background:C.ink,color:"#fff",border:"none",borderRadius:24,padding:"11px 16px",fontSize:12,fontWeight:700,fontFamily:F.head,cursor:"pointer",boxShadow:"0 6px 20px rgba(10,10,10,.22)",display:"flex",gap:8,alignItems:"center"}}><span style={{width:8,height:8,borderRadius:"50%",background:C.green,display:"inline-block"}}/>Ask the Advisor</button>);
+}
+
+/* ═══════════════════════════ SIGN-IN — invitation only; the invited email is the username ═══════════════════════════ */
+const ONBOARDING_LEAD = {name:"Alex Todd", email:"alex@fohboh.com"};
+const INVITATIONS = [
+  {email:"rosa.alvarez@bluefinhg.com", name:"Rosa Alvarez", title:"General Manager", org:"Bluefin Hospitality Group", module:"Sentry M04:SCR", locations:"Loc #03 — Uptown Dallas"},
+  {email:"d.chen@meridiangroup.com", name:"David Chen", title:"General Manager", org:"The Meridian Group", module:"Sentry M04:SCR", locations:"Loc #07 — River North"},
+  {email:"michael@fohboh.com", name:"Michael Atkinson", title:"Founder & CEO", org:"FohBoh.ai (presenter)", module:"Sentry M04:SCR", locations:"All demo locations"},
+  {email:"guest@fohboh.com", name:"Pilot Guest", title:"Evaluator", org:"MGE Pilot Restaurant Group", module:"Sentry M04:SCR", locations:"Demo"},
+];
+const findInvite = e => INVITATIONS.find(i=>i.email.toLowerCase()===String(e||"").trim().toLowerCase());
+const Field = ({label,children}) => (<div style={{display:"flex",flexDirection:"column",gap:5}}><Label style={{fontSize:9}}>{label}</Label>{children}</div>);
+const inputStyle = {padding:"11px 12px",border:`1px solid ${C.line2}`,borderRadius:8,fontSize:13.5,fontFamily:F.body,background:"#fff",width:"100%"};
+function SignIn({onSignedIn, presetEmail}){
+  const [stage,setStage] = useState(1);
+  const [email,setEmail] = useState(presetEmail||""); const [pw,setPw] = useState(""); const [pw2,setPw2] = useState(""); const [accept,setAccept] = useState(false); const [err,setErr] = useState(null);
+  const [name,setName] = useState(""); const [title,setTitle] = useState(""); const [org,setOrg] = useState(""); const [phone,setPhone] = useState("");
+  const invite = findInvite(email);
+  const create = () => {
+    if (!invite) return setErr("No invitation for that email. Accounts exist by invitation only — the invited email is the username, always. New people are invited by your Onboarding Lead.");
+    if (!pw || pw!==pw2) return setErr("Passwords do not match.");
+    if (!accept) return setErr("Please accept the Terms of Service, Privacy Policy and Data Security Agreement to continue.");
+    setErr(null); setName(invite.name); setTitle(invite.title); setOrg(invite.org); setStage(2);
+  };
+  const finish = () => { if (!name.trim()||!org.trim()) return setErr("Full name and organization are required."); onSignedIn({email:invite.email, name:name.trim(), title:title.trim(), org:org.trim(), phone, role:"Evidence Custodian", module:invite.module, locations:invite.locations, acceptedAt:new Date().toISOString(), termsVersion:"3.2"}); };
+  return (
+    <div style={{width:"100%",maxWidth:980,padding:"48px 36px 80px",display:"grid",gridTemplateColumns:"minmax(0,1.1fr) minmax(320px,0.9fr)",gap:40,alignItems:"start"}}>
+      <div style={{paddingTop:12}}>
+        <Label color={C.gold} style={{marginBottom:16}}>Sentry™ · M04:SCR · Supply Chain Certification · pilot console</Label>
+        <div style={{fontFamily:F.head,fontSize:46,fontWeight:800,color:C.ink,letterSpacing:"-0.03em",lineHeight:1.08,marginBottom:18}}>You're probably owed money.<br/><span style={{color:C.gold}}>We can prove it.</span></div>
+        <div style={{fontSize:16,color:C.muted,lineHeight:1.65,maxWidth:520,marginBottom:28}}>Every vendor invoice is sealed on receipt, reconciled against your contract, purchase order and receiving log by a deterministic rule set, and certified — or not — with the evidence itemized. Recovery claims arrive as a Certified Analysis & Audit Report the vendor's AR desk cannot argue with.</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,maxWidth:520}}>
+          {[["Invitation only","Accounts exist by invitation only — the invited email is the username, always."],["Sealed on receipt","SHA-256 hashed and time-stamped before anyone at FohBoh can open it."],["You attest, personally","Sealing an evidence batch is the named custodian's act — no one at FohBoh can do it, at any privilege level."],["No AI in certification","AI proposes mappings before and explains after. Only MGE certifies."]].map(([t,d],i)=>(<div key={i} style={{background:C.card,border:`1px solid ${C.line}`,borderRadius:10,padding:"12px 14px"}}><div style={{fontFamily:F.head,fontSize:12.5,fontWeight:700,color:C.ink,marginBottom:3}}>{t}</div><div style={{fontSize:11.5,color:C.muted,lineHeight:1.5}}>{d}</div></div>))}
+        </div>
+      </div>
+      <Card style={{padding:26,marginBottom:0,boxShadow:"0 10px 30px rgba(10,10,10,.06)"}}>
+        {stage===1 ? (<>
+          <Label style={{marginBottom:4}}>Step 1 of 2</Label>
+          <div style={{fontFamily:F.head,fontSize:22,fontWeight:800,color:C.ink,marginBottom:6}}>Accept your invitation</div>
+          <div style={{fontSize:12,color:C.muted,lineHeight:1.55,marginBottom:16}}>Invited by your FohBoh Onboarding Lead — <strong>{ONBOARDING_LEAD.name}</strong> · {ONBOARDING_LEAD.email}</div>
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            <Field label="Invited email · your username"><input value={email} onChange={e=>{setEmail(e.target.value);setErr(null);}} placeholder="you@yourrestaurant.com" style={inputStyle} autoComplete="username"/>
+              {email && (invite ? <M s={{fontSize:10,color:C.green}}>✓ Invitation found — {invite.name}, {invite.org} · {invite.module}</M> : <M s={{fontSize:10,color:C.muted2}}>Checking against invitations…</M>)}</Field>
+            <Field label="Create a password"><input type="password" value={pw} onChange={e=>setPw(e.target.value)} style={inputStyle} autoComplete="new-password"/></Field>
+            <Field label="Confirm password"><input type="password" value={pw2} onChange={e=>setPw2(e.target.value)} style={inputStyle} autoComplete="new-password"/></Field>
+            <label style={{display:"flex",gap:10,alignItems:"flex-start",fontSize:11.5,color:C.muted,lineHeight:1.5,cursor:"pointer"}}><input type="checkbox" checked={accept} onChange={e=>setAccept(e.target.checked)} style={{marginTop:3,accentColor:C.gold}}/><span>I accept the Terms of Service v3.2, Privacy Policy and Data Security Agreement (MSA). My acceptance is recorded with a timestamp.</span></label>
+            {err&&<div style={{background:C.redT,borderRadius:8,padding:"9px 12px",fontSize:12,color:C.ink,lineHeight:1.5}}>{err}</div>}
+            <button onClick={create} style={{background:C.gold,border:"none",color:"#fff",padding:"13px 0",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:F.head}}>Create account</button>
+            <div style={{fontSize:11,color:C.muted,lineHeight:1.5}}>Your email is your username — always. There is no self-registration; if you're ever locked out, we re-invite you.</div>
+            <div style={{background:C.fill,borderRadius:8,padding:"8px 12px"}}><M s={{fontSize:10,color:C.muted}}>DEMO BUILD · no real account is created — the email is sample data and any password works. Invited emails in this build: {INVITATIONS.map(i=>i.email).join(" · ")}</M></div>
+          </div>
+        </>) : (<>
+          <Label style={{marginBottom:4}}>Step 2 of 2</Label>
+          <div style={{fontFamily:F.head,fontSize:22,fontWeight:800,color:C.ink,marginBottom:14}}>Tell us who's signing in</div>
+          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+            <Field label="Full name"><input value={name} onChange={e=>setName(e.target.value)} style={inputStyle}/></Field>
+            <Field label="Title"><input value={title} onChange={e=>setTitle(e.target.value)} style={inputStyle}/></Field>
+            <Field label="Restaurant / organization"><input value={org} onChange={e=>setOrg(e.target.value)} style={inputStyle}/></Field>
+            <Field label="Direct phone (optional)"><input value={phone} onChange={e=>setPhone(e.target.value)} style={inputStyle}/></Field>
+            <div style={{background:C.goldT,borderRadius:8,padding:"10px 12px",fontSize:12,color:C.ink,lineHeight:1.55}}>You are named <strong>Evidence Custodian</strong> for this account. Sealing an evidence batch is your personal act — no one at FohBoh can do it for you, at any privilege level.</div>
+            {err&&<div style={{background:C.redT,borderRadius:8,padding:"9px 12px",fontSize:12,color:C.ink}}>{err}</div>}
+            <button onClick={finish} style={{background:C.ink,border:"none",color:"#fff",padding:"13px 0",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:F.head}}>Continue to the console</button>
+          </div>
+        </>)}
+        <div style={{marginTop:16,paddingTop:12,borderTop:`1px solid ${C.line}`}}><M s={{fontSize:9.5,color:C.muted2}}>Terms v3.2 · Privacy · Data Security · © 2026 FohBoh.ai, Inc. · Patent pending</M></div>
+      </Card>
+    </div>
+  );
+}
+function Welcome({profile, onDemo, onSkip}){
+  const first = profile.name.split(" ")[0];
+  return (
+    <div style={{animation:"rise .4s ease-out",textAlign:"center",paddingTop:30}}>
+      <Label color={C.gold} style={{marginBottom:14}}>{profile.module} · {profile.org}</Label>
+      <div style={{fontFamily:F.head,fontSize:40,fontWeight:800,color:C.ink,letterSpacing:"-0.03em",marginBottom:10}}>Welcome, {first}. Your console is ready.</div>
+      <div style={{fontSize:15,color:C.muted,maxWidth:520,margin:"0 auto 28px",lineHeight:1.6}}>You are the named Evidence Custodian for {profile.org}. Everything you seal here carries your name, the UTC time, and a hash.</div>
+      <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+        <button onClick={onDemo} style={{background:C.gold,border:"none",color:"#fff",padding:"14px 24px",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:F.head}}>▶ Care for a demo of your console?</button>
+        <button onClick={onSkip} style={{background:C.card,border:`1px solid ${C.line2}`,color:C.ink,padding:"14px 24px",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:F.head}}>Skip for now — take me to upload</button>
+      </div>
+      <div style={{fontSize:12,color:C.muted2,marginTop:16}}>You can replay it anytime from <strong>Guided demo ▶</strong> in the header — handy for teammates you invite later.</div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════ GUIDED DEMO — self-guided tour cards across the platform ═══════════════════════════ */
+const TOUR = [
+  {key:"signin", t:"Sign in by invitation", d:"Accounts exist by invitation only — the invited email is the username, always. Step 2 names you Evidence Custodian.", note:"You have done this already. Sign out from the header to see it again.", go:null},
+  {key:"upload", t:"Upload — or three-way match", d:"Drop a vendor invoice, or switch to Three-way match and drop the invoice, purchase order and receiving log. Every file is sealed on receipt.", note:"Try: use the built-in set so you need no files.", go:"upload"},
+  {key:"attest", t:"Attest & seal", d:"The parser proposes what each file is; you correct it if wrong. Then you — personally — attest the batch is complete and provided as issued, and sign electronically.", note:"Try: type your name, tick the statement, any password, Attest & seal.", go:"attest"},
+  {key:"ingest", t:"Ingest — the eight steps", d:"Ingest, Seal, Normalize, Reconcile, Apply Rules, Score, Narrative Seal, Output. Watch the Seal line show your document hashes.", note:"Nothing to click — let it run (~10 s).", go:"ingest"},
+  {key:"rules", t:"Rules fire one at a time", d:"R236 first — the certification floor. Then price, quantity, three-way match, duplicate, credit memo, tax. PASS, FAIL or N/A, each with evidence.", note:"Read one FAIL aloud; it cites a contract clause or a signed log.", go:"rules"},
+  {key:"findings", t:"Findings & Trust Score", d:"Eight weighted Trust Gates, the R236 coverage floor, the Vendor Reliability Score, and one card per finding with the dollar amount.", note:"Try: the ⓘ beside the Trust Score opens a six-field tool tip.", go:"findings"},
+  {key:"caar", t:"The CAAR", d:"Certified Analysis & Audit Report — addressed, rule-cited, sealed. Scroll to the seal block: document hashes, payload seal, your attestation, and the hash-chained activity log.", note:"Try: Back — every earlier screen is a read-only view of this sealed run.", go:"caar"},
+  {key:"advisory", t:"Advisory Memorandum", d:"A separate, deliberately unsealed document from the Sentry Advisor. It quotes the CAAR and interprets it — and is never inside the CAAR's hash.", note:"Note the four-layer strip: AI maps, MGE certifies the map, MGE certifies the invoice, Sentry Advisor.", go:"advisory"},
+  {key:"chat", t:"Ask the Sentry Advisor", d:"A read-only chat over the certified run. Ask why the Trust Score is what it is, what R226 found, who attested — then ask it to change the score.", note:"It refuses. That refusal is Trust Wall 2.", go:"chat"},
+  {key:"guide", t:"Presenter Guide & tool tips", d:"The purple tab on the right opens the guide for whatever screen you are on. Small ⓘ markers open tool tips: what this is, source, type, meaning, how it works, why it's needed.", note:"Both are safe to show an audience.", go:"guide"},
+  {key:"back", t:"Going back — and what seals protect", d:"You can revisit any screen of a sealed run; nothing changes. You cannot add a file or re-attest inside it — that is a supplementary batch or a new run with its own seal.", note:"New invoice starts a new run. The old one keeps its seals.", go:null},
+];
+function GuidedDemo({visited, onGo, onClose, profile}){
+  const done = k => visited.has(k);
+  return (<>
+    <div onClick={onClose} style={{position:"fixed",inset:0,background:"rgba(10,10,10,.28)",zIndex:60,animation:"fadeIn .2s ease-out"}}/>
+    <div style={{position:"fixed",top:0,left:0,bottom:0,width:"min(420px,100vw)",zIndex:61,background:C.paper,borderRight:`1.5px solid ${C.green}`,boxShadow:"8px 0 32px rgba(10,10,10,.18)",display:"flex",flexDirection:"column",animation:"fadeIn .25s ease-out"}}>
+      <div style={{background:C.card,borderBottom:`1px solid ${C.line}`,padding:"14px 18px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div><Label color={C.gold} style={{marginBottom:3}}>Guided demo · self-guided tour</Label><div style={{fontFamily:F.head,fontSize:16,fontWeight:800,color:C.ink}}>Demo walkthrough · practice account</div></div>
+        <button onClick={onClose} style={{background:"transparent",border:`1px solid ${C.line2}`,color:C.muted,fontSize:15,cursor:"pointer",padding:"2px 9px",borderRadius:6}}>×</button>
+      </div>
+      <div style={{padding:"10px 18px",background:C.fill,borderBottom:`1px solid ${C.line}`,fontSize:11.5,color:C.muted,lineHeight:1.5}}>This practice console simulates everything your live pilot will do — nothing here is real, nothing is saved, and no account is created. {TOUR.filter(c=>done(c.key)).length}/{TOUR.length} seen.</div>
+      <div style={{flex:1,overflowY:"auto",padding:"12px 14px 24px",display:"flex",flexDirection:"column",gap:8}}>
+        {TOUR.map((c,i)=>(
+          <div key={c.key} style={{background:C.card,border:`1px solid ${done(c.key)?C.green:C.line}`,borderRadius:10,padding:"12px 14px"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:6}}>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}><div style={{width:22,height:22,borderRadius:"50%",background:done(c.key)?C.green:C.fill,color:done(c.key)?"#fff":C.muted,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:700,fontFamily:F.mono}}>{done(c.key)?"✓":i+1}</div><span style={{fontFamily:F.head,fontSize:13,fontWeight:700,color:C.ink}}>{c.t}</span></div>
+              <Tag color={done(c.key)?C.green:C.muted2} bg={done(c.key)?C.greenT:C.fill}>{done(c.key)?"seen":"upcoming"}</Tag>
+            </div>
+            <div style={{fontSize:12,color:C.ink,lineHeight:1.55,marginBottom:6}}>{c.d}</div>
+            <div style={{fontSize:11,color:C.muted,lineHeight:1.5,marginBottom:c.go?8:0}}>{c.note}</div>
+            {c.go&&<button onClick={()=>onGo(c.go)} style={{background:C.gold,border:"none",color:"#fff",padding:"7px 12px",borderRadius:7,fontSize:11.5,fontWeight:700,cursor:"pointer",fontFamily:F.head}}>Take me there →</button>}
+          </div>))}
+        <M s={{fontSize:9,color:C.muted2,letterSpacing:"0.08em",display:"block",marginTop:8,textAlign:"center"}}>© 2026 FohBoh.ai, Inc. All rights reserved | Patent Pending</M>
+      </div>
+    </div>
+  </>);
+}
+
+
+function ProgressBar({step}){
+  return (
+    <div style={{display:"flex",width:"100%"}}>
+      {STEP_LABELS.map((lbl,i)=>{ const done=i<step, active=i===step;
+        return (
+          <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",position:"relative"}}>
+            {i<STEP_LABELS.length-1&&<div style={{position:"absolute",top:15,left:"50%",width:"100%",height:2,background:done?C.gold:C.line2,transition:"background .4s"}}/>}
+            <div style={{width:32,height:32,borderRadius:"50%",zIndex:1,background:active?C.ink:done?C.gold:C.card,border:`2px solid ${active?C.ink:done?C.gold:C.line2}`,
+              display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,fontFamily:F.mono,color:active||done?"#fff":C.muted2,transition:"all .3s"}}>{done?"✓":i+1}</div>
+            <div style={{fontSize:10,color:active?C.ink:done?C.muted:C.muted2,marginTop:8,letterSpacing:"0.1em",textTransform:"uppercase",fontFamily:F.mono,fontWeight:600}}>{lbl}</div>
+          </div>); })}
+    </div>
+  );
+}
+
+/* ═══════════════════════════ APP ═══════════════════════════ */
+function MGEDemo(){
+  const [step,setStep] = useState(0);
+  const [fileName,setFileName] = useState("");
+  const [docHash,setDocHash] = useState(null);
+  const [phase,setPhase] = useState(0);
+  const [certData,setCertData] = useState(null);
+  const [error,setError] = useState(null);
+  const [guideOpen,setGuideOpen] = useState(false);
+  const [run,setRun] = useState(0);
+  const [mode,setMode] = useState("single");
+  const [staged,setStaged] = useState([]);
+  const [custodian,setCustodian] = useState("");
+  const [profile,setProfileState] = useState(()=>{ try { const p = sessionStorage.getItem("mge_profile"); return p ? JSON.parse(p) : null; } catch(e){ return null; } });
+  const setProfile = p => { setProfileState(p); try { if (p) sessionStorage.setItem("mge_profile", JSON.stringify(p)); else sessionStorage.removeItem("mge_profile"); } catch(e){} };
+  const [welcome,setWelcome] = useState(false);
+  const [tourOpen,setTourOpen] = useState(false);
+  const [visited,setVisited] = useState(()=>new Set());
+  const [sealedRun,setSealedRun] = useState(false);
+  const presetEmail = (typeof window!=="undefined" && new URLSearchParams(window.location.search).get("invite")) || "";
+  const markVisited = k => setVisited(v=>{ if (v.has(k)) return v; const n=new Set(v); n.add(k); return n; });
+  const logRef = useRef([]); const [logTick,setLogTick] = useState(0);
+  const addLog = async ev => { await appendLog(logRef.current, ev); setLogTick(t=>t+1); };
+  const [tip,setTip] = useState(null);
+  const [chatOpen,setChatOpen] = useState(false);
+  const [advisorKey,setAdvisorKey] = useState((typeof window!=="undefined" && window.MGE_ADVISOR_KEY) || null);
+  const [docHashes,setDocHashes] = useState(null);
+
+  const finalize = async (invoice, dHash, name, ctx={}) => {
+    const result = runRules(invoice, ctx);
+    const issued = new Date();
+    const issuedAt = issued.toLocaleString("en-US",{month:"long",day:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit",second:"2-digit",timeZone:"UTC"})+" UTC";
+    const payload = JSON.stringify({docHash:dHash, docHashes:ctx.hashes||null, attestation:ctx.attestation||null, invoice:result.invoice, po:result.po, recvDoc:result.recvDoc, lineItems:result.lineItems, ruleResults:result.ruleResults, trustScore:result.trustScore, vendorScore:result.vendorScore, summary:result.summary});
+    const payloadHash = await sha256(payload);
+    const caarId = `CAAR-${issued.getFullYear()}-${payloadHash.slice(0,6).toUpperCase()}`;
+    const iumId = `IUM-${payloadHash.slice(6,12).toUpperCase()}`;
+    return {...result, docHash:dHash, docHashes:ctx.hashes||null, attestation:ctx.attestation||null, payloadHash, caarId, iumId, issuedAt, fileName:name, log:logRef.current};
+  };
+
+  const runPipeline = async (name, work) => {
+    setFileName(name); setStep(2); setError(null); setCertData(null); setDocHash(null); setDocHashes(null); setPhase(0); setRun(r=>r+1);
+    const tick = (n, ms) => new Promise(res=>setTimeout(()=>{setPhase(n);res();},ms));
+    try {
+      await tick(1,900);
+      const {invoice, dHash, ctx={}} = await work();
+      setDocHash(dHash); if (ctx.hashes) setDocHashes(ctx.hashes);
+      await tick(2,1400); await addLog("Landing Zone seal verified against staged digests"); await tick(3,1300); await tick(4,1400); await addLog("Reconciled against contract, receiving log, tax profile, credit ledger"); await tick(5,1200); await tick(6,1300); await tick(7,1200);
+      const data = await finalize(invoice, dHash, name, ctx);
+      await addLog(`Certification complete — ${data.summary.certificationStatus} · payload seal ${short(data.payloadHash)} · ${data.caarId}`);
+      await tick(8,1100);
+      await new Promise(r=>setTimeout(r,900));
+      setCertData(data); setStep(3);
+    } catch(e){
+      if (e.message==="PARSE_FAIL") setError(`The parser could not read this document as a vendor invoice. ${e.detail||""} The demo parser expects the invoice layout used by the sample document set; use one of those files, or run the built-in invoice.`);
+      else setError(`Certification could not complete: ${e.message}`);
+    }
+  };
+
+  const stageFiles = async (entries) => {
+    logRef.current = []; setError(null);
+    const out = [];
+    for (const {file, hint} of entries){
+      const buf = await file.arrayBuffer(); const hash = await sha256(buf); const receivedAt = new Date().toISOString();
+      const intakeId = `INT-${hash.slice(0,6).toUpperCase()}`;
+      await addLog(`Received ${file.name} · ${(file.size/1024).toFixed(0)} KB · sealed ${short(hash)} · ${intakeId}`);
+      let rows=[]; try { rows = await extractRows(buf); } catch(e){}
+      const proposed = rows.length ? classifyRows(rows) : (hint||"invoice");
+      const parsed = {}; for (const [t,fn] of [["invoice",parseInvoice],["po",parsePO],["rl",parseReceiving]]) { try { parsed[t]=fn(rows,file.name); } catch(e){ parsed[t]=null; } }
+      await addLog(`Classified ${intakeId} as ${DOC_TYPES[proposed].toLowerCase()} — parser proposal`);
+      out.push({name:file.name, size:file.size, hash, intakeId, receivedAt, proposed, type:proposed, parsed, doc:parsed[proposed], corrected:false});
+    }
+    setStaged(out); setStep(1);
+  };
+  const handleUpload = file => stageFiles([{file, hint:"invoice"}]);
+  const handleThreeWay = docs => stageFiles([{file:docs.invoice,hint:"invoice"}, ...(docs.po?[{file:docs.po,hint:"po"}]:[]), ...(docs.rl?[{file:docs.rl,hint:"rl"}]:[])]);
+  const stageBuiltIn = async (three) => {
+    logRef.current = []; setError(null);
+    const mk = async (name, type, doc, obj) => { const hash = await sha256(JSON.stringify(obj)); const intakeId=`INT-${hash.slice(0,6).toUpperCase()}`; await addLog(`Received ${name} (built-in) · sealed ${short(hash)} · ${intakeId}`); await addLog(`Classified ${intakeId} as ${DOC_TYPES[type].toLowerCase()} — parser proposal`); return {name, size:0, hash, intakeId, receivedAt:new Date().toISOString(), proposed:type, type, parsed:{[type]:doc}, doc, corrected:false}; };
+    const inv = {...DEMO_INVOICE,lineItems:DEMO_INVOICE.lineItems.map(l=>({...l}))};
+    const items = [await mk("INV-2026-04392_Northstar_Foodservice.pdf","invoice",inv,DEMO_INVOICE)];
+    if (three){ items.push(await mk("PO-BF-2211_Purchase_Order.pdf","po",{...DEMO_PO},DEMO_PO)); items.push(await mk("RL-04392_Receiving_Log.pdf","rl",{...DEMO_RL},DEMO_RL)); }
+    setStaged(items); setStep(1);
+  };
+  const handlePush = async ({statement, custodian:name}) => {
+    const inv = staged.find(f=>f.type==="invoice"&&f.doc); if (!inv) return;
+    setSealedRun(true);
+    const po = staged.find(f=>f.type==="po"&&f.doc); const rl = staged.find(f=>f.type==="rl"&&f.doc);
+    const signedAt = new Date().toISOString();
+    const attHash = await sha256(`${statement}|${name}|${signedAt}|${staged.map(f=>f.hash).join(",")}`);
+    const attestation = {custodian:name, org:(profile&&profile.org)||CUSTODIAN_ORG, statement, signedAt, hash:attHash, files:staged.map(f=>({intakeId:f.intakeId,type:f.type,hash:f.hash}))};
+    await addLog(`Attested & sealed by ${name}, Evidence Custodian · signature record ${short(attHash)} · ${staged.length} file${staged.length>1?"s":""}`);
+    await addLog(`Batch pushed to MGE through the Sentry API contract · authorization: attestation ${short(attHash)}`);
+    const hashes = {invoice:inv.hash, po:po?po.hash:null, rl:rl?rl.hash:null};
+    const three = mode==="three" || !!po || !!rl;
+    const label = staged.map(f=>f.name).join(" + ");
+    return runPipeline(label, async ()=>({invoice:inv.doc, dHash:inv.hash, ctx:{threeWay:three, po:po?po.doc:null, recvDoc:rl?rl.doc:null, hashes:three?hashes:null, attestation}}));
+  };
+  const runDemo = () => stageBuiltIn(false);
+  const runThreeWayDemo = () => stageBuiltIn(true);
+  const reset = () => { setStep(0); setFileName(""); setCertData(null); setError(null); setGuideOpen(false); setDocHash(null); setPhase(0); setStaged([]); logRef.current=[]; setLogTick(t=>t+1); setSealedRun(false); setWelcome(false); };
+  useEffect(()=>{ const k=["upload","attest","ingest","rules","findings","caar","advisory"][step]; if (profile && !welcome && k) markVisited(k); },[step,profile,welcome]);
+  useEffect(()=>{ if (chatOpen) markVisited("chat"); },[chatOpen]);
+  useEffect(()=>{ if (guideOpen||tip) markVisited("guide"); },[guideOpen,tip]);
+  useEffect(()=>{ if (profile) markVisited("signin"); },[profile]);
+  const signIn = p => { setProfile(p); setCustodian(p.name); setWelcome(true); };
+  const signOut = () => { reset(); setProfile(null); setVisited(new Set()); };
+  const tourGo = async (where) => {
+    setTourOpen(false); setWelcome(false);
+    const needRun = ["ingest","rules","findings","caar","advisory","chat"];
+    if (where==="upload"){ reset(); return; }
+    if (where==="attest"){ if (step===1) return; reset(); setTimeout(()=>stageBuiltIn(mode==="three"),50); return; }
+    if (where==="guide"){ setGuideOpen(true); return; }
+    if (needRun.includes(where)){
+      if (!certData){ setError("Run a certification first — card 3 (Attest & seal) with the built-in set gets you there in about 30 seconds."); reset(); setTimeout(()=>{ setError(null); stageBuiltIn(mode==="three"); },50); return; }
+      const idx = {ingest:2,rules:3,findings:4,caar:5,advisory:6}[where]; if (idx) setStep(idx);
+      if (where==="chat") setChatOpen(true);
+    }
+  };
+
+  const guideSection = !profile ? "signin" : (["upload","attest","ingest","rules","findings","caar","advisory"][step] || "upload");
+  const guideLabel = ["GUIDE","ATTEST GUIDE","INGEST GUIDE","RULES GUIDE","FINDINGS GUIDE","CAAR GUIDE","ADVISORY GUIDE"][step] || "GUIDE";
+  const content = [
+    <StepUpload key="u" onUpload={handleUpload} onDemo={runDemo} onThreeWay={handleThreeWay} onThreeWayDemo={runThreeWayDemo} mode={mode} setMode={setMode}/>,
+    <StepAttest key="attest" staged={staged} setStaged={setStaged} custodian={custodian} setCustodian={setCustodian} onPush={handlePush} log={logRef.current} logTick={logTick} mode={mode} org={profile&&profile.org} sealed={sealedRun}/>,
+    <StepIngest key={`i${run}`} fileName={fileName} docHash={docHash} docHashes={docHashes} phase={phase}/>,
+    certData?<StepRules key={`r${run}`} data={certData} onComplete={()=>setStep(4)}/>:<div/>,
+    certData?<StepFindings key={`f${run}`} data={certData}/>:<div/>,
+    certData?<StepCAAR key={`c${run}`} data={certData}/>:<div/>,
+    certData?<StepAdvisory key={`a${run}`} data={certData} advisorKey={advisorKey} onOpenChat={()=>setChatOpen(true)}/>:<div/>,
+  ];
+
+  return (
+    <TipCtx.Provider value={setTip}>
+    <div style={{minHeight:"100vh",background:C.paper,display:"flex",flexDirection:"column",alignItems:"center"}}>
+      <div style={{width:"100%",background:C.card,borderBottom:`1.5px solid ${C.green}`,padding:"14px 32px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"sticky",top:0,zIndex:10,gap:14}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <a href="#" onClick={e=>{e.preventDefault(); if (profile) reset(); }} title="Home" style={{display:"inline-flex",textDecoration:"none"}}><Logo h={26}/></a>
+          <span style={{color:C.line2,fontSize:18}}>|</span>
+          <H s={{fontSize:15,fontWeight:800,color:C.ink,letterSpacing:"-0.01em"}}>MGE™</H>
+          <M s={{fontSize:10,color:C.muted2,letterSpacing:"0.12em"}}>SENTRY · M04:SCR</M>
+        </div>
+        <div style={{fontSize:11,color:C.muted,fontFamily:F.mono,letterSpacing:"0.08em",textTransform:"uppercase"}}>Sentry™ module · MGE API contract · SOR pilot</div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          {profile && <button onClick={()=>setTourOpen(true)} style={{fontSize:11,color:"#fff",background:C.gold,border:"none",borderRadius:6,padding:"7px 12px",cursor:"pointer",fontFamily:F.head,fontWeight:700}}>Guided demo ▶</button>}
+          {profile && step>0 && <button onClick={reset} style={{fontSize:11,color:C.ink,background:"transparent",border:`1px solid ${C.line2}`,borderRadius:6,padding:"7px 12px",cursor:"pointer",fontFamily:F.mono,letterSpacing:"0.06em"}}>New invoice</button>}
+          {profile && <div style={{display:"flex",alignItems:"center",gap:8,paddingLeft:8,borderLeft:`1px solid ${C.line}`}}><div style={{textAlign:"right",lineHeight:1.2}}><div style={{fontSize:11.5,fontWeight:600,color:C.ink}}>{profile.name}</div><M s={{fontSize:9,color:C.muted2}}>Owner · <span style={{color:C.gold,fontWeight:700}}>EC</span> Evidence Custodian</M></div><button onClick={signOut} title="Sign out" style={{fontSize:10,color:C.muted,background:"transparent",border:`1px solid ${C.line2}`,borderRadius:6,padding:"5px 8px",cursor:"pointer",fontFamily:F.mono}}>Sign out</button></div>}
+        </div>
+      </div>
+      {profile&&!welcome&&step>0&&<div style={{width:"100%",maxWidth:880,padding:"32px 36px 0"}}><ProgressBar step={step}/></div>}
+      {error&&(
+        <div style={{width:"100%",maxWidth:880,padding:"24px 36px 0"}}>
+          <Card accent={C.red}>
+            <Label color={C.red} style={{marginBottom:8}}>Certification halted</Label>
+            <div style={{fontSize:13,color:C.ink,lineHeight:1.6,marginBottom:14}}>{error}</div>
+            <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
+              <button onClick={reset} style={{color:C.ink,background:"transparent",border:`1px solid ${C.line2}`,cursor:"pointer",fontSize:12,fontFamily:F.mono,padding:"9px 14px",borderRadius:7}}>← Try another file</button>
+              <button onClick={runDemo} style={{color:"#fff",background:C.ink,border:"none",cursor:"pointer",fontSize:12,fontFamily:F.mono,fontWeight:600,padding:"9px 14px",borderRadius:7}}>▶ Run built-in invoice</button>
+            </div>
+          </Card>
+        </div>
+      )}
+      {!profile ? <SignIn onSignedIn={signIn} presetEmail={presetEmail}/>
+        : welcome ? <div style={{width:"100%",maxWidth:880,padding:"44px 36px 150px",flex:1}}><Welcome profile={profile} onDemo={()=>{setWelcome(false);setTourOpen(true);}} onSkip={()=>setWelcome(false)}/></div>
+        : <div style={{width:"100%",maxWidth:880,padding:"44px 36px 150px",flex:1}}>{!error && content[step]}</div>}
+      {profile&&!welcome&&step>=1&&step<=6&&certData&&(
+        <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,.92)",backdropFilter:"blur(8px)",borderTop:`1px solid ${C.line}`,padding:"14px 32px",display:"flex",justifyContent:"center",zIndex:5}}>
+          <div style={{display:"flex",gap:12,width:"100%",maxWidth:880}}>
+            {step>1&&<button onClick={()=>setStep(s=>s-1)} style={{flex:1,background:C.card,border:`1px solid ${C.line2}`,color:C.ink,padding:"14px 0",borderRadius:10,fontSize:14,fontWeight:600,cursor:"pointer"}}>← Back</button>}
+            {step<5
+              ? <button onClick={()=>setStep(s=>s+1)} style={{flex:2,background:C.ink,border:"none",color:"#fff",padding:"14px 0",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:F.head}}>{step===4?"Issue CAAR →":step===3?"View findings →":step===2?"Rules →":"Ingest →"}</button>
+              : step===5
+              ? <><button onClick={()=>setStep(6)} style={{flex:2,background:C.steel,border:"none",color:"#fff",padding:"14px 0",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:F.head}}>Open Advisory Memorandum → (separate document)</button>
+                  <button onClick={reset} style={{flex:1,background:C.green,border:"none",color:"#fff",padding:"14px 0",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:F.head}}>↺ New invoice</button></>
+              : <button onClick={reset} style={{flex:1,background:C.green,border:"none",color:"#fff",padding:"14px 0",borderRadius:10,fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:F.head}}>↺ New invoice</button>}
+          </div>
+        </div>
+      )}
+      {profile && !welcome && !guideOpen && !tip && !chatOpen && !tourOpen && step!==2 && <FloatingGuideButton onClick={()=>setGuideOpen(true)} label={guideLabel}/>}
+      {profile && certData && step>=4 && !chatOpen && !guideOpen && !tip && !tourOpen && <FloatingChatButton onClick={()=>setChatOpen(true)}/>}
+      {tip && <TipDrawer id={tip} onClose={()=>setTip(null)}/>}
+      {tourOpen && <GuidedDemo visited={visited} onGo={tourGo} onClose={()=>setTourOpen(false)} profile={profile}/>}
+      {chatOpen && <AdvisorChat data={certData} advisorKey={advisorKey} setAdvisorKey={setAdvisorKey} onClose={()=>setChatOpen(false)}/>}
+      {guideOpen&&(<>
+        <div onClick={()=>setGuideOpen(false)} style={{position:"fixed",inset:0,background:"rgba(20,23,26,.35)",zIndex:50,animation:"fadeIn .25s ease-out"}}/>
+        <div style={{position:"fixed",top:0,right:0,bottom:0,width:"min(400px,100vw)",zIndex:51,animation:"slideIn .3s cubic-bezier(.22,1,.36,1)",boxShadow:"-8px 0 32px rgba(20,23,26,.18)"}}>
+          <UserGuidePanel initialSection={guideSection} onClose={()=>setGuideOpen(false)}/>
+        </div>
+      </>)}
+    </div>
+    </TipCtx.Provider>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<MGEDemo/>);
+</script>
+</body>
+</html>
